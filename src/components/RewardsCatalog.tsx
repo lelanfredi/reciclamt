@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search, Filter, Award, Gift, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -29,6 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { useRewards } from "@/hooks/useRewards";
+import { useAuth } from "@/hooks/useAuth";
+import { Alert, AlertDescription } from "./ui/alert";
 
 interface Reward {
   id: string;
@@ -41,75 +44,43 @@ interface Reward {
 
 interface RewardsCatalogProps {
   userPoints?: number;
+  userId?: string;
   rewards?: Reward[];
   onRedeemReward?: (rewardId: string) => void;
 }
 
 const RewardsCatalog: React.FC<RewardsCatalogProps> = ({
   userPoints = 1250,
-  rewards = [
-    {
-      id: "1",
-      title: "Desconto em Supermercado",
-      description:
-        "Cupom de 10% de desconto em compras acima de R$100 no Supermercado Verde",
-      category: "Descontos",
-      pointCost: 500,
-      image:
-        "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
-    },
-    {
-      id: "2",
-      title: "Ingresso para Cinema",
-      description: "Um ingresso para qualquer sessão no CineMT",
-      category: "Entretenimento",
-      pointCost: 800,
-      image:
-        "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=400&q=80",
-    },
-    {
-      id: "3",
-      title: "Muda de Árvore Nativa",
-      description: "Uma muda de árvore nativa do cerrado para plantar",
-      category: "Sustentabilidade",
-      pointCost: 300,
-      image:
-        "https://images.unsplash.com/photo-1636826874099-8f5f3af30d3c?w=400&q=80",
-    },
-    {
-      id: "4",
-      title: "Curso de Compostagem",
-      description: "Acesso ao curso online de compostagem doméstica",
-      category: "Educação",
-      pointCost: 450,
-      image:
-        "https://images.unsplash.com/photo-1582560475093-ba66accbc095?w=400&q=80",
-    },
-    {
-      id: "5",
-      title: "Garrafa Reutilizável",
-      description: "Garrafa de água ecológica feita de materiais reciclados",
-      category: "Produtos",
-      pointCost: 600,
-      image:
-        "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&q=80",
-    },
-    {
-      id: "6",
-      title: "Voucher para Restaurante",
-      description: "Voucher de R$50 para o Restaurante Sustentável",
-      category: "Alimentação",
-      pointCost: 1000,
-      image:
-        "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80",
-    },
-  ],
+  userId,
+  rewards: propRewards,
   onRedeemReward = () => {},
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
+  const [selectedReward, setSelectedReward] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [redemptionMessage, setRedemptionMessage] = useState<string | null>(
+    null,
+  );
+  const [redemptionError, setRedemptionError] = useState<string | null>(null);
+
+  const { rewards: supabaseRewards, loading, redeemReward } = useRewards();
+  const { user, updateUserPoints } = useAuth();
+
+  // Use Supabase rewards if available, otherwise use props
+  const rewards =
+    supabaseRewards.length > 0
+      ? supabaseRewards.map((reward) => ({
+          id: reward.id,
+          title: reward.name,
+          description: reward.description,
+          category: reward.category,
+          pointCost: reward.points_required,
+          image:
+            reward.image_url ||
+            "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
+        }))
+      : propRewards || [];
 
   const categories = [
     "all",
@@ -130,10 +101,28 @@ const RewardsCatalog: React.FC<RewardsCatalogProps> = ({
     setIsDialogOpen(true);
   };
 
-  const confirmRedemption = () => {
-    if (selectedReward) {
-      onRedeemReward(selectedReward.id);
-      setIsDialogOpen(false);
+  const confirmRedemption = async () => {
+    if (!selectedReward || !userId) return;
+
+    setRedemptionError(null);
+    setRedemptionMessage(null);
+
+    const result = await redeemReward(userId, selectedReward.id, userPoints);
+
+    if (result.success) {
+      setRedemptionMessage(
+        `Resgate realizado com sucesso! Código: ${result.redemptionCode}`,
+      );
+      // Update user points in the auth context
+      if (result.newPoints !== null) {
+        await updateUserPoints(result.newPoints);
+      }
+      setTimeout(() => {
+        setIsDialogOpen(false);
+        setRedemptionMessage(null);
+      }, 3000);
+    } else {
+      setRedemptionError(result.error || "Erro ao resgatar recompensa");
     }
   };
 
@@ -181,7 +170,11 @@ const RewardsCatalog: React.FC<RewardsCatalogProps> = ({
         </div>
       </div>
 
-      {filteredRewards.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">Carregando recompensas...</p>
+        </div>
+      ) : filteredRewards.length === 0 ? (
         <div className="text-center py-12">
           <Gift className="h-12 w-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-xl font-medium text-gray-500">
@@ -259,6 +252,22 @@ const RewardsCatalog: React.FC<RewardsCatalogProps> = ({
             </DialogDescription>
           </DialogHeader>
 
+          {redemptionMessage && (
+            <Alert className="bg-green-50 border-green-200">
+              <AlertDescription className="text-green-700">
+                {redemptionMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {redemptionError && (
+            <Alert className="bg-red-50 border-red-200">
+              <AlertDescription className="text-red-700">
+                {redemptionError}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {selectedReward && (
             <div className="py-4">
               <div className="flex items-center gap-4 mb-4">
@@ -300,10 +309,22 @@ const RewardsCatalog: React.FC<RewardsCatalogProps> = ({
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancelar
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDialogOpen(false);
+                setRedemptionMessage(null);
+                setRedemptionError(null);
+              }}
+              disabled={!!redemptionMessage}
+            >
+              {redemptionMessage ? "Fechar" : "Cancelar"}
             </Button>
-            <Button onClick={confirmRedemption}>Confirmar Resgate</Button>
+            {!redemptionMessage && (
+              <Button onClick={confirmRedemption} disabled={!!redemptionError}>
+                Confirmar Resgate
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -8,13 +9,24 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AvatarSelector from "./AvatarSelector";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import RewardsCatalog from "./RewardsCatalog";
-import { LogOut, Award, History, BarChart3, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useRecycling } from "@/hooks/useRecycling";
+import {
+  LogOut,
+  Award,
+  History,
+  BarChart3,
+  User,
+  Settings,
+  Shield,
+} from "lucide-react";
 
 interface DashboardProps {
   userName?: string;
@@ -33,37 +45,52 @@ interface DashboardProps {
     points: number;
   }>;
   onLogout?: () => void;
+  isAdmin?: boolean;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
-  userName = "João Silva",
-  userPoints = 750,
-  userEmail = "joao.silva@email.com",
-  userBadges = [
-    { id: "1", name: "Iniciante", icon: "🌱", achieved: true },
-    { id: "2", name: "Reciclador Bronze", icon: "🥉", achieved: true },
-    { id: "3", name: "Reciclador Prata", icon: "🥈", achieved: false },
-    { id: "4", name: "Reciclador Ouro", icon: "🥇", achieved: false },
-    { id: "5", name: "Mestre da Reciclagem", icon: "♻️", achieved: false },
-  ],
-  recyclingHistory = [
-    { id: "1", date: "2023-06-15", type: "Plástico", points: 50 },
-    { id: "2", date: "2023-06-10", type: "Papel", points: 30 },
-    { id: "3", date: "2023-06-05", type: "Vidro", points: 70 },
-    { id: "4", date: "2023-05-28", type: "Metal", points: 100 },
-    { id: "5", date: "2023-05-20", type: "Plástico", points: 50 },
-    { id: "6", date: "2023-05-15", type: "Papel", points: 30 },
-    { id: "7", date: "2023-05-10", type: "Eletrônicos", points: 200 },
-    { id: "8", date: "2023-05-05", type: "Vidro", points: 70 },
-  ],
+  userName,
+  userPoints,
+  userEmail,
+  userBadges = [],
+  recyclingHistory,
   onLogout = () => console.log("Logout clicked"),
+  isAdmin = false,
 }) => {
   const [activeTab, setActiveTab] = useState("progress");
+  const navigate = useNavigate();
+  const { user, logout, updateUserAvatar } = useAuth();
+  const {
+    activities,
+    loading: recyclingLoading,
+    getRecyclingStats,
+  } = useRecycling(user?.id);
+
+  // Use data from Supabase if available, otherwise use props
+  const displayName = user?.name || userName || "Usuário";
+  const displayEmail = user?.email || userEmail || "";
+  const displayPoints = user?.points || userPoints || 0;
+  const displayHistory =
+    activities.length > 0
+      ? activities.map((activity) => ({
+          id: activity.id,
+          date: activity.created_at,
+          type: activity.material_type,
+          points: activity.points_earned,
+        }))
+      : recyclingHistory || [];
+
+  const stats = getRecyclingStats();
+
+  const handleLogout = () => {
+    logout();
+    onLogout();
+  };
 
   // Calculate progress to next level
   const nextLevelThreshold = 1000;
   const progressPercentage = Math.min(
-    (userPoints / nextLevelThreshold) * 100,
+    (displayPoints / nextLevelThreshold) * 100,
     100,
   );
 
@@ -87,20 +114,23 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         <div className="flex flex-col items-center mb-8">
-          <Avatar className="h-20 w-20 mb-4">
-            <AvatarImage
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
-              alt={userName}
+          <div className="mb-4">
+            <AvatarSelector
+              currentAvatar={user?.avatar_seed || "felix"}
+              onAvatarSelect={async (avatar) => {
+                if (updateUserAvatar) {
+                  await updateUserAvatar(avatar.seed);
+                }
+              }}
+              size="lg"
+              showEditButton={true}
             />
-            <AvatarFallback>
-              {userName.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <h3 className="text-lg font-medium">{userName}</h3>
-          <p className="text-sm text-muted-foreground">{userEmail}</p>
+          </div>
+          <h3 className="text-lg font-medium">{displayName}</h3>
+          <p className="text-sm text-muted-foreground">{displayEmail}</p>
           <div className="mt-2 flex items-center">
             <Award className="h-5 w-5 text-yellow-500 mr-2" />
-            <span className="font-bold">{userPoints}</span>
+            <span className="font-bold">{displayPoints}</span>
             <span className="ml-1 text-muted-foreground">pontos</span>
           </div>
         </div>
@@ -138,9 +168,21 @@ const Dashboard: React.FC<DashboardProps> = ({
             <User className="mr-2 h-5 w-5" />
             Perfil
           </Button>
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+              onClick={() => {
+                navigate("/admin");
+              }}
+            >
+              <Shield className="mr-2 h-5 w-5" />
+              Painel Admin
+            </Button>
+          )}
         </nav>
 
-        <Button variant="outline" className="mt-auto" onClick={onLogout}>
+        <Button variant="outline" className="mt-auto" onClick={handleLogout}>
           <LogOut className="mr-2 h-5 w-5" />
           Sair
         </Button>
@@ -172,13 +214,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <span className="text-sm font-medium">
                         Pontos Acumulados
                       </span>
-                      <span className="text-2xl font-bold">{userPoints}</span>
+                      <span className="text-2xl font-bold">
+                        {displayPoints}
+                      </span>
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Progresso para o próximo nível</span>
                         <span>
-                          {userPoints}/{nextLevelThreshold}
+                          {displayPoints}/{nextLevelThreshold}
                         </span>
                       </div>
                       <Progress value={progressPercentage} className="h-2" />
@@ -229,19 +273,27 @@ const Dashboard: React.FC<DashboardProps> = ({
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-primary/10 p-4 rounded-lg text-center">
-                    <p className="text-3xl font-bold">12kg</p>
+                    <p className="text-3xl font-bold">
+                      {stats.materialStats["Plástico"]?.weight.toFixed(1) ||
+                        "0"}
+                      kg
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       Plástico reciclado
                     </p>
                   </div>
                   <div className="bg-primary/10 p-4 rounded-lg text-center">
-                    <p className="text-3xl font-bold">8kg</p>
+                    <p className="text-3xl font-bold">
+                      {stats.materialStats["Papel"]?.weight.toFixed(1) || "0"}kg
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       Papel reciclado
                     </p>
                   </div>
                   <div className="bg-primary/10 p-4 rounded-lg text-center">
-                    <p className="text-3xl font-bold">5kg</p>
+                    <p className="text-3xl font-bold">
+                      {(stats.totalWeight * 0.5).toFixed(1)}kg
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       CO₂ economizado
                     </p>
@@ -263,20 +315,39 @@ const Dashboard: React.FC<DashboardProps> = ({
               <CardContent>
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-4">
-                    {recyclingHistory.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex justify-between items-center p-3 border rounded-lg"
-                      >
-                        <div>
-                          <p className="font-medium">{item.type}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(item.date)}
-                          </p>
-                        </div>
-                        <Badge variant="secondary">{item.points} pontos</Badge>
+                    {recyclingLoading ? (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">
+                          Carregando histórico...
+                        </p>
                       </div>
-                    ))}
+                    ) : displayHistory.length > 0 ? (
+                      displayHistory.map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex justify-between items-center p-3 border rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium">{item.type}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {formatDate(item.date)}
+                            </p>
+                          </div>
+                          <Badge variant="secondary">
+                            {item.points} pontos
+                          </Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">
+                          Nenhuma atividade de reciclagem ainda.
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Comece a reciclar para ver seu histórico aqui!
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </ScrollArea>
               </CardContent>
@@ -285,7 +356,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* Rewards Tab */}
           <TabsContent value="rewards">
-            <RewardsCatalog userPoints={userPoints} />
+            <RewardsCatalog userPoints={displayPoints} userId={user?.id} />
           </TabsContent>
 
           {/* Profile Tab */}
@@ -297,21 +368,22 @@ const Dashboard: React.FC<DashboardProps> = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
-                      alt={userName}
-                    />
-                    <AvatarFallback>
-                      {userName.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <AvatarSelector
+                    currentAvatar={user?.avatar_seed || "felix"}
+                    onAvatarSelect={async (avatar) => {
+                      if (updateUserAvatar) {
+                        await updateUserAvatar(avatar.seed);
+                      }
+                    }}
+                    size="lg"
+                    showEditButton={true}
+                  />
                   <div>
-                    <h3 className="text-xl font-bold">{userName}</h3>
-                    <p className="text-muted-foreground">{userEmail}</p>
+                    <h3 className="text-xl font-bold">{displayName}</h3>
+                    <p className="text-muted-foreground">{displayEmail}</p>
                     <div className="mt-2 flex items-center">
                       <Award className="h-5 w-5 text-yellow-500 mr-2" />
-                      <span className="font-bold">{userPoints}</span>
+                      <span className="font-bold">{displayPoints}</span>
                       <span className="ml-1 text-muted-foreground">
                         pontos acumulados
                       </span>
@@ -329,7 +401,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         Total de Reciclagens
                       </p>
                       <p className="text-2xl font-bold">
-                        {recyclingHistory.length}
+                        {stats.totalActivities}
                       </p>
                     </div>
                     <div className="bg-muted p-3 rounded-lg">

@@ -22,27 +22,27 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Leaf, Phone, Mail, Check, AlertCircle } from "lucide-react";
+import { Leaf, Phone, Mail, Check, AlertCircle, Lock } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/useAuth";
 
 const loginSchema = z.object({
-  phone: z.string().min(11, { message: "Telefone inválido" }),
+  identifier: z.string().min(1, "WhatsApp ou email é obrigatório"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
 
 const registerSchema = z.object({
-  name: z
+  name: z.string().min(1, "Nome é obrigatório"),
+  phone: z
     .string()
-    .min(2, { message: "O nome deve ter pelo menos 2 caracteres" }),
-  phone: z.string().min(11, { message: "Telefone inválido (inclua DDD)" }),
-  email: z
-    .string()
-    .email({ message: "Email inválido" })
-    .optional()
-    .or(z.literal("")),
-  acceptTerms: z.literal(true, {
-    errorMap: () => ({ message: "Você precisa aceitar os termos de uso" }),
-  }),
+    .min(10, "Número de WhatsApp deve ter pelo menos 10 dígitos")
+    .regex(/^\d+$/, "Apenas números são permitidos"),
+  email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  acceptTerms: z
+    .boolean()
+    .refine((val) => val === true, "Você deve aceitar os termos"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -66,10 +66,15 @@ const AuthForms = ({
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [verificationError, setVerificationError] = useState(false);
 
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const { login, register, loading } = useAuth();
+
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      phone: "",
+      identifier: "",
+      password: "",
     },
   });
 
@@ -79,40 +84,101 @@ const AuthForms = ({
       name: "",
       phone: "",
       email: "",
+      password: "",
       acceptTerms: false,
     },
   });
 
-  const handleLoginSubmit = (data: LoginFormValues) => {
+  const handleLoginSubmit = async (data: LoginFormValues) => {
     console.log("Login data:", data);
-    // Simulate sending verification code via WhatsApp
-    setVerificationSent(true);
-    // In a real app, this would call an API to send a verification code
-    if (onLogin) onLogin(data);
+    setAuthError(null);
+
+    // Try to login with identifier (phone or email) and password
+    const { user, error } = await login(data.identifier, data.password);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    if (user && onLogin) {
+      onLogin(data);
+    }
   };
 
-  const handleRegisterSubmit = (data: RegisterFormValues) => {
+  const handleRegisterSubmit = async (data: RegisterFormValues) => {
     console.log("Register data:", data);
-    // Simulate sending verification code via WhatsApp
-    setVerificationSent(true);
-    // In a real app, this would call an API to send a verification code
-    if (onRegister) onRegister(data);
+    setAuthError(null);
+
+    // Try to register with Supabase
+    const { user, error } = await register({
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      password: data.password,
+    });
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    if (user && onRegister) {
+      onRegister(data);
+    }
   };
 
   const handleVerifyCode = () => {
     setIsVerifying(true);
-    // Simulate verification process
+
     setTimeout(() => {
-      // For demo purposes, any 6-digit code is valid
-      if (verificationCode.length === 6) {
+      const currentPhone =
+        activeTab === "login"
+          ? loginForm.getValues().phone
+          : registerForm.getValues().phone;
+
+      // Check if it's the test user with specific code validation
+      if (currentPhone === "12996811965") {
+        if (verificationCode === "123456") {
+          setVerificationSuccess(true);
+          setVerificationError(false);
+        } else {
+          setVerificationSuccess(false);
+          setVerificationError(true);
+        }
+      } else {
+        // For other users, any code is valid for testing
         setVerificationSuccess(true);
         setVerificationError(false);
-      } else {
-        setVerificationError(true);
-        setVerificationSuccess(false);
       }
+
       setIsVerifying(false);
-    }, 1500);
+
+      // Auto-login after successful verification
+      if (
+        verificationSuccess ||
+        (currentPhone === "12996811965" && verificationCode === "123456") ||
+        currentPhone !== "12996811965"
+      ) {
+        setTimeout(() => {
+          if (activeTab === "login" && onLogin) {
+            console.log("Auto-login: Calling onLogin callback");
+            onLogin({
+              phone: loginForm.getValues().phone,
+              email: loginForm.getValues().email,
+            });
+          } else if (activeTab === "register" && onRegister) {
+            console.log("Auto-login: Calling onRegister callback");
+            onRegister({
+              name: registerForm.getValues().name,
+              phone: registerForm.getValues().phone,
+              email: registerForm.getValues().email,
+              acceptTerms: registerForm.getValues().acceptTerms,
+            });
+          }
+        }, 1000); // Wait 1 second before redirecting to show the success message
+      }
+    }, 300);
   };
 
   const resetVerification = () => {
@@ -132,11 +198,6 @@ const AuthForms = ({
         }}
       >
         <div className="p-6 bg-syntiro-50">
-          <div className="flex justify-center mb-4">
-            <div className="bg-syntiro-500 p-3 rounded-full">
-              <Leaf className="h-6 w-6 text-white" />
-            </div>
-          </div>
           <CardTitle className="text-2xl font-bold text-center text-gray-900 mb-2">
             ReciclaMT
           </CardTitle>
@@ -160,268 +221,237 @@ const AuthForms = ({
         </div>
 
         <CardContent className="p-6">
-          {!verificationSent ? (
-            <>
-              <TabsContent value="login">
-                <Form {...loginForm}>
-                  <form
-                    onSubmit={loginForm.handleSubmit(handleLoginSubmit)}
-                    className="space-y-5"
-                  >
-                    <FormField
-                      control={loginForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 font-medium">
-                            WhatsApp
-                          </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
-                              <Input
-                                placeholder="(00) 00000-0000"
-                                className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
-                                {...field}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage className="text-red-500" />
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="submit"
-                      className="w-full bg-syntiro-500 hover:bg-syntiro-600 text-white rounded-xl py-3"
-                    >
-                      Receber código no WhatsApp
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-
-              <TabsContent value="register">
-                <Form {...registerForm}>
-                  <form
-                    onSubmit={registerForm.handleSubmit(handleRegisterSubmit)}
-                    className="space-y-5"
-                  >
-                    <FormField
-                      control={registerForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 font-medium">
-                            Nome completo
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Seu nome"
-                              className="border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-500" />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 font-medium">
-                            WhatsApp
-                          </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
-                              <Input
-                                placeholder="(00) 00000-0000"
-                                className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
-                                {...field}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage className="text-red-500" />
-                          <p className="text-xs text-gray-500 mt-1">
-                            Usaremos para enviar confirmações e notificações
-                          </p>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 font-medium">
-                            Email (opcional)
-                          </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
-                              <Input
-                                placeholder="seu@email.com"
-                                className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
-                                {...field}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage className="text-red-500" />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="acceptTerms"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl p-4 border border-syntiro-200 bg-syntiro-50/50">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              className="border-syntiro-300 text-syntiro-500 focus:ring-syntiro-500"
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel className="text-gray-700">
-                              Aceito os termos de uso e política de privacidade
-                            </FormLabel>
-                            <p className="text-xs text-gray-500">
-                              Ao aceitar, você concorda em receber mensagens
-                              sobre reciclagem e recompensas.
-                            </p>
-                          </div>
-                          <FormMessage className="text-red-500" />
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="submit"
-                      className="w-full bg-syntiro-500 hover:bg-syntiro-600 text-white rounded-xl py-3"
-                    >
-                      Cadastrar com WhatsApp
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-            </>
-          ) : (
-            <div className="space-y-5">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Verificação por WhatsApp
-              </h3>
-              <p className="text-sm text-gray-600">
-                Enviamos um código de verificação para o seu WhatsApp. Por
-                favor, insira o código abaixo para continuar.
-              </p>
-
-              {verificationSuccess && (
-                <Alert className="bg-syntiro-50 border-syntiro-200 rounded-xl">
-                  <Check className="h-4 w-4 text-syntiro-600" />
-                  <AlertTitle className="text-syntiro-800 font-semibold">
-                    Verificação concluída!
-                  </AlertTitle>
-                  <AlertDescription className="text-syntiro-700">
-                    Seu número foi verificado com sucesso. Você será
-                    redirecionado em instantes.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {verificationError && (
-                <Alert className="bg-red-50 border-red-200 rounded-xl">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <AlertTitle className="text-red-800 font-semibold">
-                    Código inválido
-                  </AlertTitle>
-                  <AlertDescription className="text-red-700">
-                    O código informado não é válido. Por favor, verifique e
-                    tente novamente.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-2">
-                <Label
-                  htmlFor="verification-code"
-                  className="text-gray-700 font-medium"
-                >
-                  Código de verificação
-                </Label>
-                <Input
-                  id="verification-code"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  placeholder="Digite o código de 6 dígitos"
-                  maxLength={6}
-                  className="text-center text-lg tracking-widest border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
-                  disabled={verificationSuccess}
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleVerifyCode}
-                  className="flex-1 bg-syntiro-500 hover:bg-syntiro-600 text-white rounded-xl py-3"
-                  disabled={
-                    verificationCode.length !== 6 ||
-                    isVerifying ||
-                    verificationSuccess
-                  }
-                >
-                  {isVerifying ? "Verificando..." : "Verificar código"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={resetVerification}
-                  disabled={isVerifying || verificationSuccess}
-                  className="border-syntiro-200 text-syntiro-700 hover:bg-syntiro-50 rounded-xl"
-                >
-                  Voltar
-                </Button>
-              </div>
-
-              <p className="text-xs text-center text-gray-500 mt-4">
-                Não recebeu o código?{" "}
-                <Button
-                  variant="link"
-                  className="p-0 h-auto text-xs text-syntiro-600 hover:text-syntiro-700"
-                  onClick={resetVerification}
-                >
-                  Tentar novamente
-                </Button>
-              </p>
-            </div>
+          {authError && (
+            <Alert className="mb-4 bg-red-50 border-red-200 rounded-xl">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertTitle className="text-red-800 font-semibold">
+                Erro
+              </AlertTitle>
+              <AlertDescription className="text-red-700">
+                {authError}
+              </AlertDescription>
+            </Alert>
           )}
+
+          <TabsContent value="login">
+            <Form {...loginForm}>
+              <form
+                onSubmit={loginForm.handleSubmit(handleLoginSubmit)}
+                className="space-y-5"
+              >
+                <FormField
+                  control={loginForm.control}
+                  name="identifier"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">
+                        WhatsApp ou Email
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
+                          <Input
+                            placeholder="12996811965 ou seu@email.com"
+                            className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={loginForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">
+                        Senha
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
+                          <Input
+                            type="password"
+                            placeholder="Sua senha"
+                            className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-syntiro-500 hover:bg-syntiro-600 text-white rounded-xl py-3"
+                >
+                  {loading ? "Entrando..." : "Entrar"}
+                </Button>
+              </form>
+            </Form>
+          </TabsContent>
+
+          <TabsContent value="register">
+            <Form {...registerForm}>
+              <form
+                onSubmit={registerForm.handleSubmit(handleRegisterSubmit)}
+                className="space-y-5"
+              >
+                <FormField
+                  control={registerForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">
+                        Nome completo
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Seu nome"
+                          className="border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={registerForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">
+                        WhatsApp
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
+                          <Input
+                            placeholder="12996811965"
+                            className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-500" />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Usaremos para enviar confirmações e notificações
+                      </p>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={registerForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">
+                        Email
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
+                          <Input
+                            placeholder="seu@email.com"
+                            className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={registerForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">
+                        Senha
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
+                          <Input
+                            type="password"
+                            placeholder="Mínimo 6 caracteres"
+                            className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={registerForm.control}
+                  name="acceptTerms"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl p-4 border border-syntiro-200 bg-syntiro-50/50">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border-syntiro-300 text-syntiro-500 focus:ring-syntiro-500"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-gray-700">
+                          Aceito os termos de uso e política de privacidade
+                        </FormLabel>
+                        <p className="text-xs text-gray-500">
+                          Ao aceitar, você concorda em receber mensagens sobre
+                          reciclagem e recompensas.
+                        </p>
+                      </div>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-syntiro-500 hover:bg-syntiro-600 text-white rounded-xl py-3"
+                >
+                  {loading ? "Cadastrando..." : "Cadastrar"}
+                </Button>
+              </form>
+            </Form>
+          </TabsContent>
         </CardContent>
 
         <CardFooter className="p-6 pt-0 text-center text-sm text-gray-500">
-          {!verificationSent &&
-            (activeTab === "login" ? (
-              <p>
-                Não tem uma conta?{" "}
-                <Button
-                  variant="link"
-                  className="p-0 text-syntiro-600 hover:text-syntiro-700"
-                  onClick={() => setActiveTab("register")}
-                >
-                  Cadastre-se
-                </Button>
-              </p>
-            ) : (
-              <p>
-                Já tem uma conta?{" "}
-                <Button
-                  variant="link"
-                  className="p-0 text-syntiro-600 hover:text-syntiro-700"
-                  onClick={() => setActiveTab("login")}
-                >
-                  Faça login
-                </Button>
-              </p>
-            ))}
+          {activeTab === "login" ? (
+            <p>
+              Não tem uma conta?{" "}
+              <Button
+                variant="link"
+                className="p-0 text-syntiro-600 hover:text-syntiro-700"
+                onClick={() => setActiveTab("register")}
+              >
+                Cadastre-se
+              </Button>
+            </p>
+          ) : (
+            <p>
+              Já tem uma conta?{" "}
+              <Button
+                variant="link"
+                className="p-0 text-syntiro-600 hover:text-syntiro-700"
+                onClick={() => setActiveTab("login")}
+              >
+                Faça login
+              </Button>
+            </p>
+          )}
         </CardFooter>
       </Tabs>
     </div>
