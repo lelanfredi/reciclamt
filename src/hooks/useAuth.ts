@@ -2,7 +2,34 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Tables } from "../types/supabase";
 
-type User = Tables<"users">;
+type User = Tables<"users"> & { role?: string };
+
+// Função utilitária para traduzir mensagens de erro do Supabase
+function traduzirErroSupabase(mensagem: string): string {
+  if (!mensagem) return "Erro desconhecido. Tente novamente.";
+  if (mensagem.includes("429") || mensagem.includes("Too Many Requests") || mensagem.includes("For security purposes")) {
+    return "Você está tentando se cadastrar muito rápido. Aguarde 15 segundos e tente novamente.";
+  }
+  if (mensagem.includes("User already registered") || mensagem.includes("Usuário já existe")) {
+    return "Usuário já existe com este email ou telefone.";
+  }
+  if (mensagem.includes("Invalid login credentials") || mensagem.includes("Credenciais inválidas")) {
+    return "E-mail ou senha incorretos.";
+  }
+  if (mensagem.includes("Password should be at least 6 characters")) {
+    return "A senha deve ter pelo menos 6 caracteres.";
+  }
+  if (mensagem.includes("Signup is disabled")) {
+    return "Cadastro temporariamente indisponível.";
+  }
+  if (mensagem.includes("Invalid email")) {
+    return "E-mail inválido.";
+  }
+  if (mensagem.includes("400") || mensagem.includes("406")) {
+    return "Dados inválidos ou já cadastrados.";
+  }
+  return "Erro: " + mensagem;
+}
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -35,7 +62,7 @@ export function useAuth() {
         });
 
         if (error) {
-          return { user: null, error: { message: "Credenciais inválidas" } };
+          return { user: null, error: { message: traduzirErroSupabase("Credenciais inválidas") } };
         }
 
         // Get user profile from database
@@ -55,7 +82,7 @@ export function useAuth() {
             phone: data.user.user_metadata?.phone || "",
             points: 0,
             avatar_seed: "felix",
-            is_admin: data.user.email === "reciclamt.projeto@gmail.com",
+            role: ["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(data.user.email) ? "admin" : "user",
             created_at: data.user.created_at,
             updated_at: new Date().toISOString(),
           };
@@ -63,7 +90,7 @@ export function useAuth() {
           // Use existing profile data
           userData = {
             ...userProfile,
-            is_admin: userProfile.email === "reciclamt.projeto@gmail.com",
+            role: userProfile.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userProfile.email) ? "admin" : "user"),
           };
         }
 
@@ -79,7 +106,7 @@ export function useAuth() {
           .single();
 
         if (profileError || !userProfile) {
-          return { user: null, error: { message: "Usuário não encontrado" } };
+          return { user: null, error: { message: traduzirErroSupabase("Usuário não encontrado") } };
         }
 
         const userData = {
@@ -117,7 +144,7 @@ export function useAuth() {
       if (existingUser) {
         return {
           user: null,
-          error: { message: "Usuário já existe com este email ou telefone" },
+          error: { message: traduzirErroSupabase("Usuário já existe com este email ou telefone") },
         };
       }
 
@@ -144,7 +171,7 @@ export function useAuth() {
       } else if (authError) {
         return {
           user: null,
-          error: { message: authError.message || "Erro ao criar conta" },
+          error: { message: traduzirErroSupabase(authError.message || "Erro ao criar conta") },
         };
       } else if (authData.user) {
         userId = authData.user.id;
@@ -152,7 +179,7 @@ export function useAuth() {
       } else {
         return {
           user: null,
-          error: { message: "Erro inesperado no registro" },
+          error: { message: traduzirErroSupabase("Erro inesperado no registro") },
         };
       }
 
@@ -166,6 +193,7 @@ export function useAuth() {
           phone: userData.phone,
           points: 0,
           avatar_seed: "felix",
+          role: ["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userData.email) ? "admin" : "user",
         })
         .select()
         .single();
@@ -174,7 +202,7 @@ export function useAuth() {
         console.error("Error creating user profile:", dbError);
         return {
           user: null,
-          error: { message: "Erro ao criar perfil do usuário" },
+          error: { message: traduzirErroSupabase("Erro ao criar perfil do usuário") },
         };
       }
 
@@ -186,7 +214,7 @@ export function useAuth() {
         phone: userData.phone,
         points: newUserData?.points || 0,
         avatar_seed: newUserData?.avatar_seed || "felix",
-        is_admin: userData.email === "reciclamt.projeto@gmail.com",
+        role: newUserData?.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userData.email) ? "admin" : "user"),
         created_at: createdAt,
         updated_at: new Date().toISOString(),
       };
@@ -196,13 +224,14 @@ export function useAuth() {
       return { user: newUser, error: null };
     } catch (error: any) {
       console.error("Registration error:", error);
-      return { user: null, error: { message: "Erro ao criar conta" } };
+      return { user: null, error: { message: traduzirErroSupabase(error?.message || "Erro ao criar conta") } };
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     localStorage.removeItem("reciclamt_user");
   };

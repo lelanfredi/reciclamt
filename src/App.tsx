@@ -105,7 +105,7 @@ function App() {
           <Route
             path="/admin"
             element={
-              user && isAdmin ? <AdminPanel /> : <Navigate to="/" replace />
+              user && user.role === "admin" ? <AdminPanel /> : <Navigate to="/" replace />
             }
           />
           <Route path="/quemsomos" element={<QuemSomos />} />

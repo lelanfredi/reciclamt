@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useRef } from "react";
+import { supabase } from "../lib/supabase";
 
 interface Reward {
   id: string;
@@ -68,6 +70,46 @@ const initialUsers: User[] = [];
 export function AdminPanel() {
   const [activeTab, setActiveTab] = useState("rewards");
   const [rewards, setRewards] = useState<Reward[]>(initialRewards);
+
+  // Buscar recompensas do Supabase ao carregar o painel
+  useEffect(() => {
+    const fetchRewards = async () => {
+      const { data, error } = await supabase.from("rewards").select("*");
+      console.log("Recompensas do Supabase:", data, error);
+      if (!error && data) {
+        // Mapear campos snake_case para camelCase e ajustar available
+        const mapped = data.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          description: r.description,
+          pointsRequired: r.points_required,
+          category: r.category,
+          imageUrl: r.image_url,
+          available: typeof r.available === "string" ? r.available : (r.available === true ? "true" : (r.available === false ? "false" : "soon")),
+        }));
+        setRewards(mapped);
+      }
+    };
+    fetchRewards();
+
+    // Buscar usuários do Supabase
+    const fetchUsers = async () => {
+      const { data, error } = await supabase.from("users").select("*");
+      console.log("Usuários do Supabase:", data, error);
+      if (!error && data) {
+        const mapped = data.map((u: any) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          phone: u.phone,
+          points: u.points,
+          joinDate: u.created_at,
+        }));
+        setUsers(mapped);
+      }
+    };
+    fetchUsers();
+  }, []);
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -82,7 +124,7 @@ export function AdminPanel() {
     description: "",
     pointsRequired: 0,
     category: "",
-    available: true,
+    available: "true", // "true", "false" ou "soon"
     imageUrl: "",
   });
 
@@ -101,7 +143,7 @@ export function AdminPanel() {
   const handleSelectChange = (name: string, value: string) => {
     setFormData({
       ...formData,
-      [name]: name === "available" ? value === "true" : value,
+      [name]: value,
     });
   };
 
@@ -112,7 +154,7 @@ export function AdminPanel() {
       description: "",
       pointsRequired: 0,
       category: "",
-      available: true,
+      available: "true",
       imageUrl: "",
     });
     setIsAddRewardOpen(true);
@@ -126,20 +168,46 @@ export function AdminPanel() {
       description: reward.description,
       pointsRequired: reward.pointsRequired,
       category: reward.category,
-      available: reward.available,
+      available: reward.available === true ? "true" : (reward.available === false ? "false" : "soon"),
       imageUrl: reward.imageUrl,
     });
     setIsEditRewardOpen(true);
   };
 
-  // Add new reward
-  const addReward = () => {
-    const newReward: Reward = {
-      id: `${rewards.length + 1}`,
-      ...formData,
+  // Add new reward (persistente)
+  const addReward = async () => {
+    const newReward = {
+      name: formData.name,
+      description: formData.description,
+      points_required: formData.pointsRequired,
+      category: formData.category,
+      available: formData.available === "true" ? "true" : (formData.available === "soon" ? "soon" : "false"),
+      image_url: formData.imageUrl,
     };
-    setRewards([...rewards, newReward]);
+    const { data, error } = await supabase
+      .from("rewards")
+      .insert([newReward])
+      .select()
+      .single();
+    if (error) {
+      alert("Erro ao salvar recompensa: " + error.message);
+      return;
+    }
+    // Mapear o retorno do insert para camelCase
+    setRewards([
+      ...rewards,
+      {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        pointsRequired: data.points_required,
+        category: data.category,
+        imageUrl: data.image_url,
+        available: typeof data.available === "string" ? data.available : (data.available === true ? "true" : (data.available === false ? "false" : "soon")),
+      },
+    ]);
     setIsAddRewardOpen(false);
+    alert("Recompensa criada com sucesso!");
   };
 
   // Update existing reward
@@ -147,9 +215,10 @@ export function AdminPanel() {
     if (!currentReward) return;
 
     const updatedRewards = rewards.map((reward) =>
-      reward.id === currentReward.id ? { ...reward, ...formData } : reward,
+      reward.id === currentReward.id
+        ? { ...reward, ...formData, available: formData.available === "true" ? true : (formData.available === "soon" ? "soon" : false) }
+        : reward
     );
-
     setRewards(updatedRewards);
     setIsEditRewardOpen(false);
   };
@@ -163,7 +232,9 @@ export function AdminPanel() {
   const toggleRewardAvailability = (id: string) => {
     setRewards(
       rewards.map((reward) =>
-        reward.id === id ? { ...reward, available: !reward.available } : reward,
+        reward.id === id
+          ? { ...reward, available: reward.available === true ? "soon" : (reward.available === "soon" ? false : true) }
+          : reward,
       ),
     );
   };
@@ -175,12 +246,13 @@ export function AdminPanel() {
       reward.description.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCategory =
-      categoryFilter === "" || reward.category === categoryFilter;
+      categoryFilter === "all" || reward.category === categoryFilter;
 
     const matchesAvailability =
       availabilityFilter === "all" ||
-      (availabilityFilter === "available" && reward.available) ||
-      (availabilityFilter === "unavailable" && !reward.available);
+      (availabilityFilter === "available" && reward.available === "true") ||
+      (availabilityFilter === "unavailable" && reward.available === "false") ||
+      (availabilityFilter === "soon" && reward.available === "soon");
 
     return matchesSearch && matchesCategory && matchesAvailability;
   });
@@ -197,6 +269,54 @@ export function AdminPanel() {
   const categories = Array.from(
     new Set(rewards.map((reward) => reward.category)),
   );
+
+  // Opções padronizadas de categoria
+  const categoriaOpcoes = [
+    "Alimentação",
+    "Serviços",
+    "Produtos",
+    "Experiências",
+    "Outros"
+  ];
+
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [userForm, setUserForm] = useState({
+    name: "",
+    phone: "",
+    points: 0,
+    role: "user",
+  });
+
+  // Abrir modal de edição de usuário
+  const openEditUserDialog = (user: User) => {
+    setCurrentUser(user);
+    setUserForm({
+      name: user.name,
+      phone: user.phone,
+      points: user.points,
+      role: (user as any).role || "user",
+    });
+    setIsEditUserOpen(true);
+  };
+
+  // Atualizar usuário no estado
+  const updateUser = () => {
+    if (!currentUser) return;
+    const updatedUsers = users.map((u) =>
+      u.id === currentUser.id
+        ? { ...u, ...userForm, points: Number(userForm.points), role: userForm.role }
+        : u
+    );
+    setUsers(updatedUsers);
+    setIsEditUserOpen(false);
+  };
+
+  // Handle input do modal de usuário
+  const handleUserFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setUserForm({ ...userForm, [name]: name === "points" ? Number(value) : value });
+  };
 
   return (
     <div className="container mx-auto p-6 bg-white min-h-screen">
@@ -256,6 +376,7 @@ export function AdminPanel() {
                 <SelectContent>
                   <SelectItem value="all">Todos Status</SelectItem>
                   <SelectItem value="available">Disponível</SelectItem>
+                  <SelectItem value="soon">Em breve</SelectItem>
                   <SelectItem value="unavailable">Indisponível</SelectItem>
                 </SelectContent>
               </Select>
@@ -288,6 +409,7 @@ export function AdminPanel() {
                       value={formData.name}
                       onChange={handleInputChange}
                       className="col-span-3"
+                      placeholder="Ex: Vale-compras, Desconto, Brinde..."
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
@@ -300,6 +422,7 @@ export function AdminPanel() {
                       value={formData.description}
                       onChange={handleInputChange}
                       className="col-span-3"
+                      placeholder="Descreva a recompensa, regras, validade..."
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
@@ -313,19 +436,27 @@ export function AdminPanel() {
                       value={formData.pointsRequired}
                       onChange={handleInputChange}
                       className="col-span-3"
+                      placeholder="Ex: 100, 500, 1000..."
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="category" className="text-right">
                       Categoria
                     </Label>
-                    <Input
-                      id="category"
+                    <Select
                       name="category"
                       value={formData.category}
-                      onChange={handleInputChange}
-                      className="col-span-3"
-                    />
+                      onValueChange={(value) => handleSelectChange("category", value)}
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categoriaOpcoes.map((cat) => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="available" className="text-right">
@@ -333,16 +464,15 @@ export function AdminPanel() {
                     </Label>
                     <Select
                       name="available"
-                      value={formData.available ? "true" : "false"}
-                      onValueChange={(value) =>
-                        handleSelectChange("available", value)
-                      }
+                      value={formData.available}
+                      onValueChange={(value) => handleSelectChange("available", value)}
                     >
                       <SelectTrigger className="col-span-3">
-                        <SelectValue />
+                        <SelectValue placeholder="Selecione o status" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="true">Sim</SelectItem>
+                        <SelectItem value="soon">Em breve</SelectItem>
                         <SelectItem value="false">Não</SelectItem>
                       </SelectContent>
                     </Select>
@@ -357,11 +487,12 @@ export function AdminPanel() {
                       value={formData.imageUrl}
                       onChange={handleInputChange}
                       className="col-span-3"
+                      placeholder="URL da imagem (opcional)"
                     />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" onClick={addReward}>
+                  <Button type="submit" onClick={e => { e.preventDefault(); addReward(); }}>
                     Adicionar
                   </Button>
                 </DialogFooter>
@@ -385,8 +516,8 @@ export function AdminPanel() {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-xl">{reward.name}</CardTitle>
-                    <Badge variant={reward.available ? "default" : "outline"}>
-                      {reward.available ? "Disponível" : "Indisponível"}
+                    <Badge variant={reward.available === true ? "default" : (reward.available === "soon" ? "secondary" : "outline")}>
+                      {reward.available === true ? "Disponível" : (reward.available === "soon" ? "Em breve" : "Indisponível")}
                     </Badge>
                   </div>
                   <CardDescription className="text-sm text-gray-500">
@@ -431,6 +562,7 @@ export function AdminPanel() {
                             value={formData.name}
                             onChange={handleInputChange}
                             className="col-span-3"
+                            placeholder="Ex: Vale-compras, Desconto, Brinde..."
                           />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
@@ -446,6 +578,7 @@ export function AdminPanel() {
                             value={formData.description}
                             onChange={handleInputChange}
                             className="col-span-3"
+                            placeholder="Descreva a recompensa, regras, validade..."
                           />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
@@ -462,19 +595,27 @@ export function AdminPanel() {
                             value={formData.pointsRequired}
                             onChange={handleInputChange}
                             className="col-span-3"
+                            placeholder="Ex: 100, 500, 1000..."
                           />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="edit-category" className="text-right">
                             Categoria
                           </Label>
-                          <Input
-                            id="edit-category"
+                          <Select
                             name="category"
                             value={formData.category}
-                            onChange={handleInputChange}
-                            className="col-span-3"
-                          />
+                            onValueChange={(value) => handleSelectChange("category", value)}
+                          >
+                            <SelectTrigger className="col-span-3">
+                              <SelectValue placeholder="Selecione uma categoria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categoriaOpcoes.map((cat) => (
+                                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label
@@ -485,16 +626,15 @@ export function AdminPanel() {
                           </Label>
                           <Select
                             name="available"
-                            value={formData.available ? "true" : "false"}
-                            onValueChange={(value) =>
-                              handleSelectChange("available", value)
-                            }
+                            value={formData.available}
+                            onValueChange={(value) => handleSelectChange("available", value)}
                           >
                             <SelectTrigger className="col-span-3">
-                              <SelectValue />
+                              <SelectValue placeholder="Selecione o status" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="true">Sim</SelectItem>
+                              <SelectItem value="soon">Em breve</SelectItem>
                               <SelectItem value="false">Não</SelectItem>
                             </SelectContent>
                           </Select>
@@ -509,6 +649,7 @@ export function AdminPanel() {
                             value={formData.imageUrl}
                             onChange={handleInputChange}
                             className="col-span-3"
+                            placeholder="URL da imagem (opcional)"
                           />
                         </div>
                       </div>
@@ -613,7 +754,7 @@ export function AdminPanel() {
                       {new Date(user.joinDate).toLocaleDateString("pt-BR")}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" onClick={() => openEditUserDialog(user)}>
                         <Edit className="h-4 w-4 mr-1" /> Editar
                       </Button>
                     </td>
@@ -672,6 +813,65 @@ export function AdminPanel() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modal de edição de usuário */}
+      <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+            <DialogDescription>Altere os dados do usuário abaixo.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-user-name" className="text-right">Nome</Label>
+              <Input
+                id="edit-user-name"
+                name="name"
+                value={userForm.name}
+                onChange={handleUserFormChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-user-phone" className="text-right">Telefone</Label>
+              <Input
+                id="edit-user-phone"
+                name="phone"
+                value={userForm.phone}
+                onChange={handleUserFormChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-user-points" className="text-right">Pontos</Label>
+              <Input
+                id="edit-user-points"
+                name="points"
+                type="number"
+                value={userForm.points}
+                onChange={handleUserFormChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-user-role" className="text-right">Perfil</Label>
+              <select
+                id="edit-user-role"
+                name="role"
+                value={userForm.role}
+                onChange={handleUserFormChange}
+                className="col-span-3 border rounded px-2 py-1"
+              >
+                <option value="user">Usuário</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={updateUser}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

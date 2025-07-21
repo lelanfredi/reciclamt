@@ -26,6 +26,7 @@ import { Leaf, Phone, Mail, Check, AlertCircle, Lock } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "../lib/supabase";
 
 const loginSchema = z.object({
   identifier: z.string().min(1, "WhatsApp ou email é obrigatório"),
@@ -67,6 +68,10 @@ const AuthForms = ({
   const [verificationError, setVerificationError] = useState(false);
 
   const [authError, setAuthError] = useState<string | null>(null);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
 
   const { login, register, loading } = useAuth();
 
@@ -181,6 +186,21 @@ const AuthForms = ({
     }, 300);
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetMessage(null);
+    setResetLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: window.location.origin + "/reset-password"
+    });
+    if (error) {
+      setResetMessage("Erro ao enviar e-mail de recuperação. Verifique o e-mail digitado.");
+    } else {
+      setResetMessage("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+    }
+    setResetLoading(false);
+  };
+
   const resetVerification = () => {
     setVerificationSent(false);
     setVerificationCode("");
@@ -234,66 +254,107 @@ const AuthForms = ({
           )}
 
           <TabsContent value="login">
-            <Form {...loginForm}>
-              <form
-                onSubmit={loginForm.handleSubmit(handleLoginSubmit)}
-                className="space-y-5"
-              >
-                <FormField
-                  control={loginForm.control}
-                  name="identifier"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-medium">
-                        WhatsApp ou Email
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
-                          <Input
-                            placeholder="12996811965 ou seu@email.com"
-                            className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-500" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={loginForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-medium">
-                        Senha
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
-                          <Input
-                            type="password"
-                            placeholder="Sua senha"
-                            className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-500" />
-                    </FormItem>
-                  )}
-                />
-
+            {showResetPassword ? (
+              <form onSubmit={handleResetPassword} className="space-y-5">
+                <div>
+                  <FormLabel className="text-gray-700 font-medium">E-mail cadastrado</FormLabel>
+                  <Input
+                    type="email"
+                    placeholder="Digite seu e-mail"
+                    value={resetEmail}
+                    onChange={e => setResetEmail(e.target.value)}
+                    className="border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
+                    required
+                  />
+                </div>
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={resetLoading}
                   className="w-full bg-syntiro-500 hover:bg-syntiro-600 text-white rounded-xl py-3"
                 >
-                  {loading ? "Entrando..." : "Entrar"}
+                  {resetLoading ? "Enviando..." : "Enviar link de recuperação"}
                 </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="w-full text-syntiro-600 mt-2"
+                  onClick={() => { setShowResetPassword(false); setResetMessage(null); }}
+                >
+                  Voltar para login
+                </Button>
+                {resetMessage && (
+                  <div className="text-center text-sm mt-2 text-syntiro-700">{resetMessage}</div>
+                )}
               </form>
-            </Form>
+            ) : (
+              <Form {...loginForm}>
+                <form
+                  onSubmit={loginForm.handleSubmit(handleLoginSubmit)}
+                  className="space-y-5"
+                >
+                  <FormField
+                    control={loginForm.control}
+                    name="identifier"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 font-medium">
+                          WhatsApp ou Email
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
+                            <Input
+                              placeholder="65999999999 ou seu@email.com"
+                              className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-red-500" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 font-medium">
+                          Senha
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
+                            <Input
+                              type="password"
+                              placeholder="Sua senha"
+                              className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-red-500" />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-syntiro-500 hover:bg-syntiro-600 text-white rounded-xl py-3"
+                  >
+                    {loading ? "Entrando..." : "Entrar"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="w-full text-syntiro-600 mt-2"
+                    onClick={() => setShowResetPassword(true)}
+                  >
+                    Esqueci minha senha
+                  </Button>
+                </form>
+              </Form>
+            )}
           </TabsContent>
 
           <TabsContent value="register">
