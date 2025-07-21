@@ -39,7 +39,16 @@ export function useAuth() {
     // Check if user is stored in localStorage
     const storedUser = localStorage.getItem("reciclamt_user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      // Buscar dados mais recentes do usuário no Supabase
+      (async () => {
+        const { data, error } = await supabase.from("users").select("*").eq("id", parsedUser.id).single();
+        if (!error && data) {
+          setUser(data);
+          localStorage.setItem("reciclamt_user", JSON.stringify(data));
+        }
+      })();
     }
     setLoading(false);
   }, []);

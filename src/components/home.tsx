@@ -41,6 +41,18 @@ const Home = ({
     }
   };
 
+  // Definição dos parceiros para exibir os logos no final da página
+  const parceiros = [
+    {
+      alt: "Fapemat",
+      src: "/images/fapemat.png"
+    },
+    {
+      alt: "Finep",
+      src: "/images/finep.png"
+    }
+  ];
+
   if (userAuthenticated) {
     return (
       <motion.div
@@ -937,6 +949,24 @@ const Home = ({
           </div>
         </div>
       </section>
+       {/* Seção de parceiros/apoio - acima do footer de navegação */}
+      <section className="w-full bg-white py-6 border-t mt-12">
+        <div className="max-w-4xl mx-auto flex flex-col items-center">
+          <h3 className="text-sm font-semibold text-gray-600 mb-3">Apoio:</h3>
+          <div className="flex flex-wrap justify-center items-center gap-6">
+            {parceiros.map((p) => (
+              <img
+                key={p.alt}
+                src={p.src}
+                alt={p.alt}
+                className="h-12 md:h-16 object-contain"
+                style={{ maxWidth: 207 }}
+                loading="lazy"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4">
@@ -1048,6 +1078,7 @@ const Home = ({
           </div>
         </div>
       </footer>
+     
     </div>
   );
 };

@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 interface Reward {
   id: string;
@@ -113,7 +114,7 @@ export function AdminPanel() {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [availabilityFilter, setAvailabilityFilter] = useState<string>("");
+  const [availabilityFilter, setAvailabilityFilter] = useState<string>("all");
   const [isAddRewardOpen, setIsAddRewardOpen] = useState(false);
   const [isEditRewardOpen, setIsEditRewardOpen] = useState(false);
   const [currentReward, setCurrentReward] = useState<Reward | null>(null);
@@ -224,7 +225,14 @@ export function AdminPanel() {
   };
 
   // Delete reward
-  const deleteReward = (id: string) => {
+  const deleteReward = async (id: string) => {
+    // Atualizar status para 'desativado' no Supabase
+    const { error } = await supabase.from("rewards").update({ status: "desativado" }).eq("id", id);
+    if (error) {
+      alert("Erro ao desativar recompensa: " + error.message);
+      return;
+    }
+    // Remover do estado local
     setRewards(rewards.filter((reward) => reward.id !== id));
   };
 
@@ -301,8 +309,20 @@ export function AdminPanel() {
   };
 
   // Atualizar usuário no estado
-  const updateUser = () => {
+  const updateUser = async () => {
     if (!currentUser) return;
+    // Atualizar no Supabase
+    const { error } = await supabase.from("users").update({
+      name: userForm.name,
+      phone: userForm.phone,
+      points: Number(userForm.points),
+      role: userForm.role,
+    }).eq("id", currentUser.id);
+    if (error) {
+      alert("Erro ao atualizar usuário: " + error.message);
+      return;
+    }
+    // Atualizar no estado local
     const updatedUsers = users.map((u) =>
       u.id === currentUser.id
         ? { ...u, ...userForm, points: Number(userForm.points), role: userForm.role }
@@ -310,6 +330,7 @@ export function AdminPanel() {
     );
     setUsers(updatedUsers);
     setIsEditUserOpen(false);
+    alert("Usuário atualizado com sucesso!");
   };
 
   // Handle input do modal de usuário
@@ -318,8 +339,13 @@ export function AdminPanel() {
     setUserForm({ ...userForm, [name]: name === "points" ? Number(value) : value });
   };
 
+  const navigate = useNavigate();
+
   return (
     <div className="container mx-auto p-6 bg-white min-h-screen">
+      <div className="mb-4 flex justify-end">
+        <Button variant="outline" onClick={() => navigate("/")}>Voltar para área do usuário</Button>
+      </div>
       <h1 className="text-3xl font-bold mb-6">Painel Administrativo</h1>
 
       <Tabs
