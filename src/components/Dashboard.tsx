@@ -55,7 +55,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   userBadges = [],
   recyclingHistory,
   onLogout = () => console.log("Logout clicked"),
-git  isAdmin = false, // não será mais usado
 }) => {
   const [activeTab, setActiveTab] = useState("progress");
   const navigate = useNavigate();
