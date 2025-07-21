@@ -55,7 +55,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   userBadges = [],
   recyclingHistory,
   onLogout = () => console.log("Logout clicked"),
-  isAdmin = false,
+git  isAdmin = false, // não será mais usado
 }) => {
   const [activeTab, setActiveTab] = useState("progress");
   const navigate = useNavigate();
@@ -168,7 +168,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <User className="mr-2 h-5 w-5" />
             Perfil
           </Button>
-          {isAdmin && (
+          {user?.role === "admin" && (
             <Button
               variant="ghost"
               className="w-full justify-start text-orange-600 hover:text-orange-700 hover:bg-orange-50"

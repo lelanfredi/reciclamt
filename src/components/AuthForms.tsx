@@ -143,7 +143,7 @@ const AuthForms = ({
           : registerForm.getValues().phone;
 
       // Check if it's the test user with specific code validation
-      if (currentPhone === "12996811965") {
+      if (currentPhone === "65999999999") {
         if (verificationCode === "123456") {
           setVerificationSuccess(true);
           setVerificationError(false);
@@ -162,8 +162,8 @@ const AuthForms = ({
       // Auto-login after successful verification
       if (
         verificationSuccess ||
-        (currentPhone === "12996811965" && verificationCode === "123456") ||
-        currentPhone !== "12996811965"
+        (currentPhone === "65999999999" && verificationCode === "123456") ||
+        currentPhone !== "65999999999"
       ) {
         setTimeout(() => {
           if (activeTab === "login" && onLogin) {
@@ -394,7 +394,7 @@ const AuthForms = ({
                         <div className="relative">
                           <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
                           <Input
-                            placeholder="12996811965"
+                            placeholder="65999999999"
                             className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
                             {...field}
                           />
