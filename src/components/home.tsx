@@ -16,6 +16,7 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface HomeProps {
   isAuthenticated?: boolean;
@@ -445,6 +446,29 @@ const Home = ({
                   Vidro
                 </span>
               </div>
+              <div className="flex flex-col items-center">
+                <div className="h-16 w-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-3">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="4" y="7" width="16" height="11" rx="2" />
+                    <rect x="9" y="3" width="6" height="4" rx="1" />
+                    <path d="M9 16h6" />
+                    <path d="M9 13h6" />
+                  </svg>
+                </div>
+                <span className="text-lg font-semibold text-gray-900">
+                  Eletrônicos
+                </span>
+              </div>
             </div>
           </div>
 
@@ -706,13 +730,9 @@ const Home = ({
                 <div className="text-6xl mb-4">💬</div>
               </div>
               <blockquote className="text-gray-700 text-lg leading-relaxed italic space-y-4">
+               
                 <p className="mb-4">
-                  &quot;Sempre me incomodou ver tanto material reciclável indo
-                  pro lixo em Cuiabá. A cidade é quente, os ecopontos são
-                  distantes, e reciclar acaba sendo difícil pra muita gente.
-                </p>
-                <p className="mb-4">
-                  O ReciclaMT nasceu da vontade de facilitar isso. Criamos uma
+                  O ReciclaMT nasceu da vontade de facilitar a coleta seletiva. Criamos um
                   forma simples de reciclar e ainda ser recompensado por isso —
                   sem precisar instalar nada, só usando o WhatsApp.
                 </p>
@@ -728,8 +748,8 @@ const Home = ({
                 </footer>
               </blockquote>
               <div className="text-center mt-8">
-                <a
-                  href="/quemsomos"
+                <Link
+                  to="/quemsomos"
                   className="inline-flex items-center text-syntiro-600 hover:text-syntiro-700 font-medium text-lg transition-colors"
                 >
                   Conheça mais sobre nossa história
@@ -748,15 +768,15 @@ const Home = ({
                     <path d="M5 12h14" />
                     <path d="m12 5 7 7-7 7" />
                   </svg>
-                </a>
+                </Link>
               </div>
             </div>
           </div>
 
           <div className="mb-8">
             <div className="text-center">
-              <a
-                href="/oprojeto"
+              <Link
+                to="/oprojeto"
                 className="inline-flex items-center text-syntiro-600 hover:text-syntiro-700 font-medium text-lg transition-colors"
               >
                 Conheça mais sobre o projeto e os ODS
@@ -775,7 +795,7 @@ const Home = ({
                   <path d="M5 12h14" />
                   <path d="m12 5 7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -1004,9 +1024,9 @@ const Home = ({
               >
                 Quem Somos
               </button>
-              <a href="/oprojeto" className="text-gray-300 hover:text-white">
+              <Link to="/oprojeto" className="text-gray-300 hover:text-white">
                 O Projeto
-              </a>
+              </Link>
               <button
                 onClick={() => handleScroll("ecopoints")}
                 className="text-gray-300 hover:text-white"

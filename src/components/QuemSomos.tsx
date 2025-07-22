@@ -232,13 +232,9 @@ const QuemSomos = () => {
                 <div className="text-6xl mb-4">💬</div>
               </div>
               <blockquote className="text-gray-700 text-lg leading-relaxed italic space-y-6">
+      
                 <p>
-                  "Sempre me incomodou ver tanto material reciclável indo pro
-                  lixo em Cuiabá. A cidade é quente, os ecopontos são distantes,
-                  e reciclar acaba sendo difícil pra muita gente.
-                </p>
-                <p>
-                  O ReciclaMT nasceu da vontade de facilitar isso. Criamos uma
+                O ReciclaMT nasceu da vontade de facilitar a coleta seletiva. Criamos uma
                   forma simples de reciclar e ainda ser recompensado por isso —
                   sem precisar instalar nada, só usando o WhatsApp.
                 </p>
