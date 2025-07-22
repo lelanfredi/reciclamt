@@ -238,9 +238,9 @@ const Home = ({
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <img
-                src="/images/container-image.png"
+                src="/images/container-frente.png"
                 alt="Containers de reciclagem ReciclaMT"
-                className="w-full h-auto rounded-2xl shadow-syntiro-lg"
+                className="w-full max-w-2xl h-auto rounded-2xl shadow-syntiro-lg mx-auto md:max-w-3xl lg:max-w-4xl"
               />
             </motion.div>
           </div>
