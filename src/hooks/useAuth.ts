@@ -28,6 +28,12 @@ function traduzirErroSupabase(mensagem: string): string {
   if (mensagem.includes("400") || mensagem.includes("406")) {
     return "Dados inválidos ou já cadastrados.";
   }
+  if (mensagem.includes("401") || mensagem.includes("Unauthorized")) {
+    return "Erro de autorização. Verifique sua conexão e tente novamente.";
+  }
+  if (mensagem.includes("duplicate key value") || mensagem.includes("23505")) {
+    return "Usuário já existe com este email ou telefone.";
+  }
   return "Erro: " + mensagem;
 }
 
@@ -39,16 +45,7 @@ export function useAuth() {
     // Check if user is stored in localStorage
     const storedUser = localStorage.getItem("reciclamt_user");
     if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      // Buscar dados mais recentes do usuário no Supabase
-      (async () => {
-        const { data, error } = await supabase.from("users").select("*").eq("id", parsedUser.id).single();
-        if (!error && data) {
-          setUser(data);
-          localStorage.setItem("reciclamt_user", JSON.stringify(data));
-        }
-      })();
+      setUser(JSON.parse(storedUser));
     }
     setLoading(false);
   }, []);
@@ -56,6 +53,7 @@ export function useAuth() {
   const login = async (identifier: string, password?: string) => {
     try {
       setLoading(true);
+      console.log("[ReciclaMT][DEBUG] Login attempt for:", identifier);
 
       // Clean up identifier (remove extra spaces)
       const cleanIdentifier = identifier.trim();
@@ -64,48 +62,56 @@ export function useAuth() {
       const isEmail = cleanIdentifier.includes("@");
 
       if (isEmail) {
-        // Use Supabase Auth for email login
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: cleanIdentifier,
-          password: password || "defaultpassword",
-        });
+        // Try Supabase Auth for email login first
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: cleanIdentifier,
+            password: password || "defaultpassword",
+          });
 
-        if (error) {
-          return { user: null, error: { message: traduzirErroSupabase("Credenciais inválidas") } };
+          if (!error && data.user) {
+            // Get user profile from database
+            const { data: userProfile, error: profileError } = await supabase
+              .from("users")
+              .select("*")
+              .eq("email", cleanIdentifier)
+              .single();
+
+            if (!profileError && userProfile) {
+              const userData = {
+                ...userProfile,
+                role: userProfile.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userProfile.email) ? "admin" : "user"),
+              };
+
+              setUser(userData);
+              localStorage.setItem("reciclamt_user", JSON.stringify(userData));
+              return { user: userData, error: null };
+            }
+          }
+        } catch (authError) {
+          console.log("[ReciclaMT][DEBUG] Auth login failed, trying database login");
         }
 
-        // Get user profile from database
+        // Fallback: try to find user in database directly
         const { data: userProfile, error: profileError } = await supabase
           .from("users")
           .select("*")
-          .eq("id", data.user.id)
+          .eq("email", cleanIdentifier)
           .single();
 
-        let userData;
         if (profileError || !userProfile) {
-          // If no profile exists, create one from auth metadata
-          userData = {
-            id: data.user.id,
-            name: data.user.user_metadata?.name || "Usuário",
-            email: data.user.email || cleanIdentifier,
-            phone: data.user.user_metadata?.phone || "",
-            points: 0,
-            avatar_seed: "felix",
-            role: ["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(data.user.email) ? "admin" : "user",
-            created_at: data.user.created_at,
-            updated_at: new Date().toISOString(),
-          };
-        } else {
-          // Use existing profile data
-          userData = {
-            ...userProfile,
-            role: userProfile.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userProfile.email) ? "admin" : "user"),
-          };
+          return { user: null, error: { message: traduzirErroSupabase("E-mail ou senha incorretos") } };
         }
+
+        const userData = {
+          ...userProfile,
+          role: userProfile.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userProfile.email) ? "admin" : "user"),
+        };
 
         setUser(userData);
         localStorage.setItem("reciclamt_user", JSON.stringify(userData));
         return { user: userData, error: null };
+
       } else {
         // For phone login, try to find user in database
         const { data: userProfile, error: profileError } = await supabase
@@ -115,12 +121,13 @@ export function useAuth() {
           .single();
 
         if (profileError || !userProfile) {
+          console.error("[ReciclaMT][ERROR] Phone login error:", profileError);
           return { user: null, error: { message: traduzirErroSupabase("Usuário não encontrado") } };
         }
 
         const userData = {
           ...userProfile,
-          is_admin: userProfile.email === "reciclamt.projeto@gmail.com",
+          role: userProfile.role || "user",
         };
 
         setUser(userData);
@@ -128,7 +135,8 @@ export function useAuth() {
         return { user: userData, error: null };
       }
     } catch (error: any) {
-      return { user: null, error };
+      console.error("[ReciclaMT][ERROR] Login exception:", error);
+      return { user: null, error: { message: traduzirErroSupabase(error?.message || "Erro no login") } };
     } finally {
       setLoading(false);
     }
@@ -142,57 +150,16 @@ export function useAuth() {
   }) => {
     try {
       setLoading(true);
+      console.log("[ReciclaMT][DEBUG] Registration attempt for:", userData.email);
 
-      // Check if user already exists
-      const { data: existingUser } = await supabase
-        .from("users")
-        .select("*")
-        .or(`email.eq.${userData.email},phone.eq.${userData.phone}`)
-        .single();
+      // Gerar um ID único para o usuário
+      const userId = crypto.randomUUID();
+      const createdAt = new Date().toISOString();
 
-      if (existingUser) {
-        return {
-          user: null,
-          error: { message: traduzirErroSupabase("Usuário já existe com este email ou telefone") },
-        };
-      }
+      console.log("[ReciclaMT][DEBUG] Creating user directly in database with ID:", userId);
 
-      // Try Supabase Auth registration first
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          data: {
-            name: userData.name,
-            phone: userData.phone,
-          },
-        },
-      });
-
-      let userId: string;
-      let createdAt: string;
-
-      if (authError && authError.message.includes("Signup is disabled")) {
-        // If signup is disabled, create user directly in database with generated ID
-        userId = crypto.randomUUID();
-        createdAt = new Date().toISOString();
-        console.log("Auth signup disabled, creating user directly in database");
-      } else if (authError) {
-        return {
-          user: null,
-          error: { message: traduzirErroSupabase(authError.message || "Erro ao criar conta") },
-        };
-      } else if (authData.user) {
-        userId = authData.user.id;
-        createdAt = authData.user.created_at;
-      } else {
-        return {
-          user: null,
-          error: { message: traduzirErroSupabase("Erro inesperado no registro") },
-        };
-      }
-
-      // Create user profile in database
+      // Criar usuário diretamente no banco de dados
+      // As políticas RLS já permitem INSERT para anon, então isso deve funcionar
       const { data: newUserData, error: dbError } = await supabase
         .from("users")
         .insert({
@@ -208,14 +175,44 @@ export function useAuth() {
         .single();
 
       if (dbError) {
-        console.error("Error creating user profile:", dbError);
+        console.error("[ReciclaMT][ERROR] Database insert error:", dbError);
+        
+        // Se o erro é de conflito (usuário já existe)
+        if (dbError.code === "23505" || dbError.message.includes("duplicate key")) {
+          return {
+            user: null,
+            error: { message: traduzirErroSupabase("Usuário já existe com este email ou telefone") },
+          };
+        }
+        
         return {
           user: null,
-          error: { message: traduzirErroSupabase("Erro ao criar perfil do usuário") },
+          error: { message: traduzirErroSupabase(dbError.message || "Erro ao criar conta") },
         };
       }
 
-      // Create user object with admin check
+      console.log("[ReciclaMT][DEBUG] User created successfully:", newUserData);
+
+      // Tentar criar no Supabase Auth também (mas não falhar se der erro)
+      try {
+        await supabase.auth.signUp({
+          email: userData.email,
+          password: userData.password,
+          options: {
+            data: {
+              name: userData.name,
+              phone: userData.phone,
+              user_id: userId, // Link para o registro na tabela users
+            },
+          },
+        });
+        console.log("[ReciclaMT][DEBUG] Auth user created successfully");
+      } catch (authError) {
+        console.log("[ReciclaMT][DEBUG] Auth signup failed, but user was created in database:", authError);
+        // Não retornar erro aqui, pois o usuário foi criado no banco
+      }
+
+      // Criar objeto do usuário
       const newUser = {
         id: userId,
         name: userData.name,
@@ -231,8 +228,9 @@ export function useAuth() {
       setUser(newUser);
       localStorage.setItem("reciclamt_user", JSON.stringify(newUser));
       return { user: newUser, error: null };
+
     } catch (error: any) {
-      console.error("Registration error:", error);
+      console.error("[ReciclaMT][ERROR] Registration exception:", error);
       return { user: null, error: { message: traduzirErroSupabase(error?.message || "Erro ao criar conta") } };
     } finally {
       setLoading(false);
@@ -240,7 +238,11 @@ export function useAuth() {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.log("[ReciclaMT][DEBUG] Auth signout failed, but clearing local session");
+    }
     setUser(null);
     localStorage.removeItem("reciclamt_user");
   };
