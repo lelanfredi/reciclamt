@@ -194,9 +194,9 @@ const Home = ({
       {/* Hero Section */}
       <section id="hero" className="pt-28 pb-16 md:pt-32 md:pb-24">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             <motion.div
-              className="flex-1"
+              className="flex-1 md:w-5/12 lg:w-4/12"
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
@@ -208,7 +208,7 @@ const Home = ({
                     E faz toda a diferença.
                   </span>
                 </h2>
-                <p className="text-gray-600 text-lg max-w-lg">
+                <p className="text-gray-600 text-lg max-w-md">
                   Cada resíduo tem destino certo e seu gesto gera impacto
                   positivo. Juntos, conectamos tecnologia, sustentabilidade e
                   bem-estar social.{" "}
@@ -232,7 +232,7 @@ const Home = ({
             </motion.div>
 
             <motion.div
-              className="w-full md:w-5/12 lg:w-5/12"
+              className="w-full md:w-5/12 lg:w-6/12"
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
@@ -240,7 +240,7 @@ const Home = ({
               <img
                 src="/images/container-frente.png"
                 alt="Containers de reciclagem ReciclaMT"
-                className="w-full max-w-2xl h-auto rounded-2xl shadow-syntiro-lg mx-auto md:max-w-3xl lg:max-w-4xl"
+                className="w-full max-w-4xl h-auto mx-auto md:max-w-5xl lg:max-w-6xl"
               />
             </motion.div>
           </div>
