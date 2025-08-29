@@ -979,8 +979,8 @@ const Home = ({
                 key={p.alt}
                 src={p.src}
                 alt={p.alt}
-                className="h-12 md:h-16 object-contain"
-                style={{ maxWidth: 207 }}
+                className="h-20 md:h-24 object-contain"
+                style={{ maxWidth: 324 }}
                 loading="lazy"
               />
             ))}
