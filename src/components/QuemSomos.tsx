@@ -172,15 +172,6 @@ const QuemSomos = () => {
                 </p>
 
                 <p>
-                  Em 2024, a ideia ganhou força com a seleção no programa{" "}
-                  <strong>Inova Cerrado – Módulo Ideação</strong>, do Sebrae
-                  Nacional. Logo depois, fomos contemplados no{" "}
-                  <strong>Tecnova III MT</strong>, com quase{" "}
-                  <strong>R$ 400 mil em recursos da Finep e Fapemat</strong>,
-                  impulsionando ainda mais nosso desenvolvimento.
-                </p>
-
-                <p>
                   Em 2024, essa ideia ganhou forma dentro do Inova Cerrado –
                   Módulo Ideação, programa nacional de inovação do Sebrae. Ali,
                   demos os primeiros passos estruturando a proposta, validando
@@ -232,9 +223,8 @@ const QuemSomos = () => {
                 <div className="text-6xl mb-4">💬</div>
               </div>
               <blockquote className="text-gray-700 text-lg leading-relaxed italic space-y-6">
-      
                 <p>
-                O ReciclaMT nasceu da vontade de facilitar a coleta seletiva. Criamos uma
+                  O ReciclaMT nasceu da vontade de facilitar a coleta seletiva. Criamos uma
                   forma simples de reciclar e ainda ser recompensado por isso —
                   sem precisar instalar nada, só usando o WhatsApp.
                 </p>

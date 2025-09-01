@@ -5,7 +5,9 @@ import Dashboard from "./components/Dashboard";
 import AdminPanel from "./components/AdminPanel";
 import QuemSomos from "./components/QuemSomos";
 import OProjeto from "./components/OProjeto";
+import PreLaunchLanding from "./components/PreLaunchLanding";
 import { useAuth } from "./hooks/useAuth";
+import { Toaster } from "@/components/ui/toaster";
 
 function App() {
   const { user, loading, logout } = useAuth();
@@ -110,8 +112,11 @@ function App() {
           />
           <Route path="/quemsomos" element={<QuemSomos />} />
           <Route path="/oprojeto" element={<OProjeto />} />
+          <Route path="/pre-lancamento" element={<PreLaunchLanding />} />
+          <Route path="/lancamento" element={<PreLaunchLanding />} />
         </Routes>
       </div>
+      <Toaster />
     </Suspense>
   );
 }

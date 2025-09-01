@@ -139,7 +139,7 @@ const AuthForms = ({
     setTimeout(() => {
       const currentPhone =
         activeTab === "login"
-          ? loginForm.getValues().phone
+          ? loginForm.getValues().identifier
           : registerForm.getValues().phone;
 
       // Check if it's the test user with specific code validation
@@ -169,8 +169,8 @@ const AuthForms = ({
           if (activeTab === "login" && onLogin) {
             console.log("Auto-login: Calling onLogin callback");
             onLogin({
-              phone: loginForm.getValues().phone,
-              email: loginForm.getValues().email,
+              identifier: loginForm.getValues().identifier,
+              password: loginForm.getValues().password,
             });
           } else if (activeTab === "register" && onRegister) {
             console.log("Auto-login: Calling onRegister callback");

@@ -17,6 +17,7 @@ export type Database = {
           email: string | null;
           points: number;
           avatar_seed: string | null;
+          role?: string;
           created_at: string;
           updated_at: string;
         };
@@ -27,6 +28,7 @@ export type Database = {
           email?: string | null;
           points?: number;
           avatar_seed?: string | null;
+          role?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -37,6 +39,7 @@ export type Database = {
           email?: string | null;
           points?: number;
           avatar_seed?: string | null;
+          role?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -78,7 +81,7 @@ export type Database = {
           points_required: number;
           category: string;
           image_url: string | null;
-          available: boolean;
+          available: string;
           created_at: string;
           updated_at: string;
         };
@@ -89,7 +92,7 @@ export type Database = {
           points_required: number;
           category: string;
           image_url?: string | null;
-          available?: boolean;
+          available?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -100,7 +103,7 @@ export type Database = {
           points_required?: number;
           category?: string;
           image_url?: string | null;
-          available?: boolean;
+          available?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -173,6 +176,32 @@ export type Database = {
           active?: boolean;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+      pre_cadastro: {
+        Row: {
+          id: number;
+          name: string;
+          phone: string;
+          neighborhood: string;
+          created_at: string;
+          status: string;
+        };
+        Insert: {
+          id?: number;
+          name: string;
+          phone: string;
+          neighborhood: string;
+          created_at?: string;
+          status?: string;
+        };
+        Update: {
+          id?: number;
+          name?: string;
+          phone?: string;
+          neighborhood?: string;
+          created_at?: string;
+          status?: string;
         };
       };
     };

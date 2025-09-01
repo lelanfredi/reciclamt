@@ -95,6 +95,12 @@ const Home = ({
           </div>
 
           <nav className="hidden md:flex items-center gap-6">
+            <Link
+              to="/pre-lancamento"
+              className="text-sm font-medium text-green-600 hover:text-green-700 bg-green-50 px-4 py-2 rounded-full transition-colors"
+            >
+              🚀 Pré-lançamento
+            </Link>
             <button
               onClick={() => handleScroll("hero")}
               className={`text-sm font-medium ${activeSection === "hero" ? "text-syntiro-600" : "text-gray-600 hover:text-syntiro-600"}`}
@@ -238,7 +244,7 @@ const Home = ({
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <img
-                src="/images/container-frente.png"
+                src="/images/containerv1.jpeg"
                 alt="Containers de reciclagem ReciclaMT"
                 className="w-full max-w-4xl h-auto mx-auto md:max-w-5xl lg:max-w-6xl"
               />
@@ -732,7 +738,7 @@ const Home = ({
               <blockquote className="text-gray-700 text-lg leading-relaxed italic space-y-4">
                
                 <p className="mb-4">
-                  O ReciclaMT nasceu da vontade de facilitar a coleta seletiva. Criamos um
+                  O ReciclaMT nasceu da vontade de facilitar a coleta seletiva. Criamos uma
                   forma simples de reciclar e ainda ser recompensado por isso —
                   sem precisar instalar nada, só usando o WhatsApp.
                 </p>
