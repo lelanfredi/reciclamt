@@ -3,11 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "build:lancamento": "tsc && vite build --mode production",
-    "build-no-errors": "tsc && vite build",
+    "build": "vite build",
+    "build:lancamento": "vite build --mode production",
+    "build-no-errors": "vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "deploy:lancamento": "npm run build:lancamento && echo 'Build pronto para deploy em /lancamento'",
