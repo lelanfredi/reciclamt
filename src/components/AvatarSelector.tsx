@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -98,14 +98,28 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({
       avatarOptions[0],
   );
   const [isOpen, setIsOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Sincronizar selectedAvatar com currentAvatar quando ele mudar
+  useEffect(() => {
+    const newSelectedAvatar = avatarOptions.find((avatar) => avatar.seed === currentAvatar) || avatarOptions[0];
+    setSelectedAvatar(newSelectedAvatar);
+  }, [currentAvatar]);
 
   const handleAvatarSelect = (avatar: AvatarOption) => {
     setSelectedAvatar(avatar);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (onAvatarSelect) {
-      onAvatarSelect(selectedAvatar);
+      setIsUpdating(true);
+      try {
+        await onAvatarSelect(selectedAvatar);
+      } catch (error) {
+        console.error("Erro ao atualizar avatar:", error);
+      } finally {
+        setIsUpdating(false);
+      }
     }
     setIsOpen(false);
   };
@@ -229,9 +243,10 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({
               </Button>
               <Button
                 onClick={handleConfirm}
-                className="flex-1 bg-syntiro-500 hover:bg-syntiro-600"
+                disabled={isUpdating}
+                className="flex-1 bg-syntiro-500 hover:bg-syntiro-600 disabled:opacity-50"
               >
-                Confirmar
+                {isUpdating ? "Salvando..." : "Confirmar"}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -31,7 +31,6 @@ const Home = ({
   onLogin,
   onRegister,
 }: HomeProps) => {
-  const [userAuthenticated, setUserAuthenticated] = useState(isAuthenticated);
   const [activeSection, setActiveSection] = useState("hero");
 
   const handleScroll = (sectionId: string) => {
@@ -54,7 +53,7 @@ const Home = ({
     }
   ];
 
-  if (userAuthenticated) {
+  if (isAuthenticated) {
     return (
       <motion.div
         className="w-full max-w-7xl"
@@ -898,12 +897,10 @@ const Home = ({
                 <AuthForms
                   onLogin={(data) => {
                     console.log("Login callback triggered with data:", data);
-                    setUserAuthenticated(true);
                     if (onLogin) onLogin(data);
                   }}
                   onRegister={(data) => {
                     console.log("Register callback triggered with data:", data);
-                    setUserAuthenticated(true);
                     if (onRegister) onRegister(data);
                   }}
                   defaultTab="register"

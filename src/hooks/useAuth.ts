@@ -48,6 +48,38 @@ export function useAuth() {
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
+
+    // Listen for auth state changes from Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("[ReciclaMT][DEBUG] Auth state changed:", event, session?.user?.email);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          // User signed in, get their profile from database
+          const { data: userProfile, error: profileError } = await supabase
+            .from("users")
+            .select("*")
+            .eq("email", session.user.email)
+            .single();
+
+          if (!profileError && userProfile) {
+            const userData = {
+              ...userProfile,
+              role: userProfile.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userProfile.email) ? "admin" : "user"),
+            };
+            setUser(userData);
+            localStorage.setItem("reciclamt_user", JSON.stringify(userData));
+          }
+        } else if (event === 'SIGNED_OUT') {
+          // User signed out
+          setUser(null);
+          localStorage.removeItem("reciclamt_user");
+        }
+      }
+    );
+
+    // Cleanup subscription on unmount
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (identifier: string, password?: string) => {
@@ -279,9 +311,11 @@ export function useAuth() {
   };
 
   const updateUserAvatar = async (avatarSeed: string) => {
-    if (!user) return;
+    if (!user) return { user: null, error: { message: "Usuário não encontrado" } };
 
     try {
+      console.log("[ReciclaMT][DEBUG] Updating avatar to:", avatarSeed);
+      
       // Update avatar in database
       const { data, error } = await supabase
         .from("users")
@@ -294,7 +328,7 @@ export function useAuth() {
         .single();
 
       if (error) {
-        console.error("Error updating avatar:", error);
+        console.error("[ReciclaMT][ERROR] Error updating avatar in database:", error);
         // Fallback to local update if database update fails
       }
 
@@ -306,8 +340,11 @@ export function useAuth() {
 
       setUser(updatedUser);
       localStorage.setItem("reciclamt_user", JSON.stringify(updatedUser));
+      
+      console.log("[ReciclaMT][DEBUG] Avatar updated successfully:", updatedUser.avatar_seed);
       return { user: updatedUser, error: null };
     } catch (error: any) {
+      console.error("[ReciclaMT][ERROR] Avatar update exception:", error);
       return { user: null, error };
     }
   };

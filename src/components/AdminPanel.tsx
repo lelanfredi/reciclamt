@@ -154,7 +154,7 @@ export function AdminPanel() {
       name: "",
       description: "",
       pointsRequired: 0,
-      category: "",
+      category: categoriaOpcoes[0] || "Outros", // Definir categoria padrão
       available: "true",
       imageUrl: "",
     });
@@ -177,51 +177,130 @@ export function AdminPanel() {
 
   // Add new reward (persistente)
   const addReward = async () => {
+    // Validação dos campos obrigatórios
+    if (!formData.name.trim()) {
+      alert("Nome da recompensa é obrigatório!");
+      return;
+    }
+    if (!formData.description.trim()) {
+      alert("Descrição da recompensa é obrigatória!");
+      return;
+    }
+    if (!formData.category) {
+      alert("Categoria é obrigatória!");
+      return;
+    }
+    if (formData.pointsRequired <= 0) {
+      alert("Pontos necessários devem ser maior que zero!");
+      return;
+    }
+
     const newReward = {
-      name: formData.name,
-      description: formData.description,
+      name: formData.name.trim(),
+      description: formData.description.trim(),
       points_required: formData.pointsRequired,
       category: formData.category,
       available: formData.available === "true" ? "true" : (formData.available === "soon" ? "soon" : "false"),
-      image_url: formData.imageUrl,
+      image_url: formData.imageUrl.trim(),
     };
-    const { data, error } = await supabase
-      .from("rewards")
-      .insert([newReward])
-      .select()
-      .single();
-    if (error) {
-      alert("Erro ao salvar recompensa: " + error.message);
-      return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("rewards")
+        .insert([newReward])
+        .select()
+        .single();
+      
+      if (error) {
+        alert("Erro ao salvar recompensa: " + error.message);
+        return;
+      }
+      
+      // Mapear o retorno do insert para camelCase
+      setRewards([
+        ...rewards,
+        {
+          id: data.id,
+          name: data.name,
+          description: data.description,
+          pointsRequired: data.points_required,
+          category: data.category,
+          imageUrl: data.image_url,
+          available: typeof data.available === "string" ? data.available : (data.available === true ? "true" : (data.available === false ? "false" : "soon")),
+        },
+      ]);
+      setIsAddRewardOpen(false);
+      alert("Recompensa criada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao criar recompensa:", error);
+      alert("Erro inesperado ao criar recompensa. Tente novamente.");
     }
-    // Mapear o retorno do insert para camelCase
-    setRewards([
-      ...rewards,
-      {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        pointsRequired: data.points_required,
-        category: data.category,
-        imageUrl: data.image_url,
-        available: typeof data.available === "string" ? data.available : (data.available === true ? "true" : (data.available === false ? "false" : "soon")),
-      },
-    ]);
-    setIsAddRewardOpen(false);
-    alert("Recompensa criada com sucesso!");
   };
 
   // Update existing reward
-  const updateReward = () => {
+  const updateReward = async () => {
     if (!currentReward) return;
 
-    const updatedRewards = rewards.map((reward) =>
-      reward.id === currentReward.id
-        ? { ...reward, ...formData, available: formData.available === "true" ? true : (formData.available === "soon" ? "soon" : false) }
-        : reward
-    );
-    setRewards(updatedRewards);
-    setIsEditRewardOpen(false);
+    // Validação dos campos obrigatórios
+    if (!formData.name.trim()) {
+      alert("Nome da recompensa é obrigatório!");
+      return;
+    }
+    if (!formData.description.trim()) {
+      alert("Descrição da recompensa é obrigatória!");
+      return;
+    }
+    if (!formData.category) {
+      alert("Categoria é obrigatória!");
+      return;
+    }
+    if (formData.pointsRequired <= 0) {
+      alert("Pontos necessários devem ser maior que zero!");
+      return;
+    }
+
+    try {
+      const updatedReward = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        points_required: formData.pointsRequired,
+        category: formData.category,
+        available: formData.available === "true" ? "true" : (formData.available === "soon" ? "soon" : "false"),
+        image_url: formData.imageUrl.trim(),
+      };
+
+      const { data, error } = await supabase
+        .from("rewards")
+        .update(updatedReward)
+        .eq("id", currentReward.id)
+        .select()
+        .single();
+
+      if (error) {
+        alert("Erro ao atualizar recompensa: " + error.message);
+        return;
+      }
+
+      const updatedRewards = rewards.map((reward) =>
+        reward.id === currentReward.id
+          ? {
+              ...reward,
+              name: data.name,
+              description: data.description,
+              pointsRequired: data.points_required,
+              category: data.category,
+              imageUrl: data.image_url,
+              available: typeof data.available === "string" ? data.available : (data.available === true ? "true" : (data.available === false ? "false" : "soon")),
+            }
+          : reward
+      );
+      setRewards(updatedRewards);
+      setIsEditRewardOpen(false);
+      alert("Recompensa atualizada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atualizar recompensa:", error);
+      alert("Erro inesperado ao atualizar recompensa. Tente novamente.");
+    }
   };
 
   // Delete reward
@@ -427,7 +506,7 @@ export function AdminPanel() {
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="name" className="text-right">
-                      Nome
+                      Nome <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="name"
@@ -440,7 +519,7 @@ export function AdminPanel() {
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="description" className="text-right">
-                      Descrição
+                      Descrição <span className="text-red-500">*</span>
                     </Label>
                     <Textarea
                       id="description"
@@ -453,7 +532,7 @@ export function AdminPanel() {
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="pointsRequired" className="text-right">
-                      Pontos
+                      Pontos <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="pointsRequired"
@@ -467,7 +546,7 @@ export function AdminPanel() {
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="category" className="text-right">
-                      Categoria
+                      Categoria <span className="text-red-500">*</span>
                     </Label>
                     <Select
                       name="category"
@@ -478,7 +557,7 @@ export function AdminPanel() {
                         <SelectValue placeholder="Selecione uma categoria" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categoriaOpcoes.map((cat) => (
+                        {categoriaOpcoes.filter(cat => cat && cat.trim() !== "").map((cat) => (
                           <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                         ))}
                       </SelectContent>
@@ -580,7 +659,7 @@ export function AdminPanel() {
                       <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="edit-name" className="text-right">
-                            Nome
+                            Nome <span className="text-red-500">*</span>
                           </Label>
                           <Input
                             id="edit-name"
@@ -596,7 +675,7 @@ export function AdminPanel() {
                             htmlFor="edit-description"
                             className="text-right"
                           >
-                            Descrição
+                            Descrição <span className="text-red-500">*</span>
                           </Label>
                           <Textarea
                             id="edit-description"
@@ -612,7 +691,7 @@ export function AdminPanel() {
                             htmlFor="edit-pointsRequired"
                             className="text-right"
                           >
-                            Pontos
+                            Pontos <span className="text-red-500">*</span>
                           </Label>
                           <Input
                             id="edit-pointsRequired"
@@ -626,7 +705,7 @@ export function AdminPanel() {
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="edit-category" className="text-right">
-                            Categoria
+                            Categoria <span className="text-red-500">*</span>
                           </Label>
                           <Select
                             name="category"
@@ -637,7 +716,7 @@ export function AdminPanel() {
                               <SelectValue placeholder="Selecione uma categoria" />
                             </SelectTrigger>
                             <SelectContent>
-                              {categoriaOpcoes.map((cat) => (
+                              {categoriaOpcoes.filter(cat => cat && cat.trim() !== "").map((cat) => (
                                 <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                               ))}
                             </SelectContent>

@@ -118,7 +118,13 @@ const Dashboard: React.FC<DashboardProps> = ({
               currentAvatar={user?.avatar_seed || "felix"}
               onAvatarSelect={async (avatar) => {
                 if (updateUserAvatar) {
-                  await updateUserAvatar(avatar.seed);
+                  const result = await updateUserAvatar(avatar.seed);
+                  if (result.error) {
+                    console.error("Erro ao atualizar avatar:", result.error);
+                    alert("Erro ao atualizar avatar. Tente novamente.");
+                  } else {
+                    console.log("Avatar atualizado com sucesso!");
+                  }
                 }
               }}
               size="lg"
@@ -371,7 +377,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                     currentAvatar={user?.avatar_seed || "felix"}
                     onAvatarSelect={async (avatar) => {
                       if (updateUserAvatar) {
-                        await updateUserAvatar(avatar.seed);
+                        const result = await updateUserAvatar(avatar.seed);
+                        if (result.error) {
+                          console.error("Erro ao atualizar avatar:", result.error);
+                          alert("Erro ao atualizar avatar. Tente novamente.");
+                        } else {
+                          console.log("Avatar atualizado com sucesso!");
+                        }
                       }
                     }}
                     size="lg"
