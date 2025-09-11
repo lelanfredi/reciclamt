@@ -94,6 +94,34 @@ const sampleEcopoints = [
   },
 ];
 
+// Sample users data
+const sampleUsers = [
+  {
+    name: "Admin ReciclaMT",
+    email: "reciclamt.projeto@gmail.com",
+    phone: "65999999999",
+    points: 0,
+    role: "admin",
+    created_at: new Date().toISOString(),
+  },
+  {
+    name: "Admin Teste",
+    email: "admin@example.com",
+    phone: "65999999998",
+    points: 0,
+    role: "admin",
+    created_at: new Date().toISOString(),
+  },
+  {
+    name: "Usuário Teste",
+    email: "teste@reciclamt.com",
+    phone: "65999999997",
+    points: 100,
+    role: "user",
+    created_at: new Date().toISOString(),
+  },
+];
+
 export async function seedDatabase() {
   try {
     console.log("🌱 Iniciando população do banco de dados...");
@@ -125,6 +153,21 @@ export async function seedDatabase() {
     } else {
       console.log(
         `✅ ${ecopointsData?.length} ecopontos inseridos com sucesso`,
+      );
+    }
+
+    // Insert users
+    console.log("👥 Inserindo usuários de teste...");
+    const { data: usersData, error: usersError } = await supabase
+      .from("users")
+      .insert(sampleUsers)
+      .select();
+
+    if (usersError) {
+      console.error("Erro ao inserir usuários:", usersError);
+    } else {
+      console.log(
+        `✅ ${usersData?.length} usuários inseridos com sucesso`,
       );
     }
 

@@ -94,7 +94,27 @@ export function useAuth() {
       const isEmail = cleanIdentifier.includes("@");
 
       if (isEmail) {
-        // Try Supabase Auth for email login first
+        // Try to find user in database first (prioritize local database)
+        const { data: userProfile, error: profileError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("email", cleanIdentifier)
+          .single();
+
+        if (!profileError && userProfile) {
+          // User exists in database, proceed with local authentication
+          const userData = {
+            ...userProfile,
+            role: userProfile.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userProfile.email) ? "admin" : "user"),
+          };
+
+          setUser(userData);
+          localStorage.setItem("reciclamt_user", JSON.stringify(userData));
+          return { user: userData, error: null };
+        }
+
+        // If user not found in database, try Supabase Auth as fallback
+        console.log("[ReciclaMT][DEBUG] User not found in database, trying Supabase Auth");
         try {
           const { data, error } = await supabase.auth.signInWithPassword({
             email: cleanIdentifier,
@@ -102,7 +122,7 @@ export function useAuth() {
           });
 
           if (!error && data.user) {
-            // Get user profile from database
+            // Get user profile from database after successful auth
             const { data: userProfile, error: profileError } = await supabase
               .from("users")
               .select("*")
@@ -121,28 +141,11 @@ export function useAuth() {
             }
           }
         } catch (authError) {
-          console.log("[ReciclaMT][DEBUG] Auth login failed, trying database login");
+          console.log("[ReciclaMT][DEBUG] Supabase Auth also failed:", authError);
         }
 
-        // Fallback: try to find user in database directly
-        const { data: userProfile, error: profileError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("email", cleanIdentifier)
-          .single();
-
-        if (profileError || !userProfile) {
-          return { user: null, error: { message: traduzirErroSupabase("E-mail ou senha incorretos") } };
-        }
-
-        const userData = {
-          ...userProfile,
-          role: userProfile.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userProfile.email) ? "admin" : "user"),
-        };
-
-        setUser(userData);
-        localStorage.setItem("reciclamt_user", JSON.stringify(userData));
-        return { user: userData, error: null };
+        // If both methods failed
+        return { user: null, error: { message: traduzirErroSupabase("E-mail ou senha incorretos") } };
 
       } else {
         // For phone login, try to find user in database
@@ -283,17 +286,36 @@ export function useAuth() {
     if (!user) return;
 
     try {
-      // Update points in database
-      const { data, error } = await supabase
+      console.log("[ReciclaMT][DEBUG] Updating points to:", points);
+      
+      // Update points in database - try by ID first, then by email as fallback
+      let { data, error } = await supabase
         .from("users")
         .update({ points, updated_at: new Date().toISOString() })
         .eq("id", user.id)
         .select()
         .single();
 
+      // If update by ID fails, try by email
+      if (error && user.email) {
+        console.log("[ReciclaMT][DEBUG] Update by ID failed, trying by email");
+        const emailResult = await supabase
+          .from("users")
+          .update({ points, updated_at: new Date().toISOString() })
+          .eq("email", user.email)
+          .select()
+          .single();
+        
+        data = emailResult.data;
+        error = emailResult.error;
+      }
+
       if (error) {
         console.error("Error updating points:", error);
-        // Fallback to local update if database update fails
+        console.log("[ReciclaMT][DEBUG] Continuing with local update only");
+        // Continue with local update even if database update fails
+      } else {
+        console.log("[ReciclaMT][DEBUG] Points updated in database successfully");
       }
 
       const updatedUser = {
@@ -316,8 +338,8 @@ export function useAuth() {
     try {
       console.log("[ReciclaMT][DEBUG] Updating avatar to:", avatarSeed);
       
-      // Update avatar in database
-      const { data, error } = await supabase
+      // Update avatar in database - try by ID first, then by email as fallback
+      let { data, error } = await supabase
         .from("users")
         .update({
           avatar_seed: avatarSeed,
@@ -327,9 +349,29 @@ export function useAuth() {
         .select()
         .single();
 
+      // If update by ID fails, try by email
+      if (error && user.email) {
+        console.log("[ReciclaMT][DEBUG] Update by ID failed, trying by email");
+        const emailResult = await supabase
+          .from("users")
+          .update({
+            avatar_seed: avatarSeed,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("email", user.email)
+          .select()
+          .single();
+        
+        data = emailResult.data;
+        error = emailResult.error;
+      }
+
       if (error) {
         console.error("[ReciclaMT][ERROR] Error updating avatar in database:", error);
-        // Fallback to local update if database update fails
+        console.log("[ReciclaMT][DEBUG] Continuing with local update only");
+        // Continue with local update even if database update fails
+      } else {
+        console.log("[ReciclaMT][DEBUG] Avatar updated in database successfully");
       }
 
       const updatedUser = {
@@ -349,6 +391,30 @@ export function useAuth() {
     }
   };
 
+  const updatePassword = async (newPassword: string) => {
+    try {
+      setLoading(true);
+      console.log("[ReciclaMT][DEBUG] Updating password");
+
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        console.error("[ReciclaMT][ERROR] Password update error:", error);
+        return { success: false, error: { message: traduzirErroSupabase(error.message) } };
+      }
+
+      console.log("[ReciclaMT][DEBUG] Password updated successfully");
+      return { success: true, error: null };
+    } catch (error: any) {
+      console.error("[ReciclaMT][ERROR] Password update exception:", error);
+      return { success: false, error: { message: traduzirErroSupabase(error?.message || "Erro ao atualizar senha") } };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     user,
     loading,
@@ -357,6 +423,7 @@ export function useAuth() {
     logout,
     updateUserPoints,
     updateUserAvatar,
+    updatePassword,
     isAuthenticated: !!user,
   };
 }

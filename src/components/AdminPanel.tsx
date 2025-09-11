@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SeedDatabaseButton } from "./SeedDatabaseButton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -886,6 +887,11 @@ export function AdminPanel() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-4">Dados de Teste</h3>
+                <SeedDatabaseButton />
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="system-name">Nome do Sistema</Label>

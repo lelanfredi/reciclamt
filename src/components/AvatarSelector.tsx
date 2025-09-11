@@ -106,6 +106,13 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({
     setSelectedAvatar(newSelectedAvatar);
   }, [currentAvatar]);
 
+  // Reset isUpdating when currentAvatar changes (avatar was successfully updated)
+  useEffect(() => {
+    if (isUpdating) {
+      setIsUpdating(false);
+    }
+  }, [currentAvatar]);
+
   const handleAvatarSelect = (avatar: AvatarOption) => {
     setSelectedAvatar(avatar);
   };
@@ -115,10 +122,11 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({
       setIsUpdating(true);
       try {
         await onAvatarSelect(selectedAvatar);
+        // Avatar will be updated via currentAvatar prop change
+        // which will trigger the useEffect to reset isUpdating
       } catch (error) {
         console.error("Erro ao atualizar avatar:", error);
-      } finally {
-        setIsUpdating(false);
+        setIsUpdating(false); // Reset on error
       }
     }
     setIsOpen(false);
