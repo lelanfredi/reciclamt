@@ -14,23 +14,6 @@ function App() {
   const { user, loading, logout } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Import tempo routes conditionally
-  let tempoRoutes = null;
-  if (import.meta.env.VITE_TEMPO) {
-    try {
-      // Use import() for dynamic imports in Vite
-      import("tempo-routes")
-        .then((module) => {
-          const routes = module.default;
-          tempoRoutes = useRoutes(routes);
-        })
-        .catch((error) => {
-          console.warn("Tempo routes not available:", error);
-        });
-    } catch (error) {
-      console.warn("Tempo routes not available:", error);
-    }
-  }
 
   useEffect(() => {
     // Check if user is admin based on email
@@ -80,11 +63,7 @@ function App() {
       }
     >
       <div className="min-h-screen bg-syntiro-50 w-full">
-        {tempoRoutes}
         <Routes>
-          {import.meta.env.VITE_TEMPO && (
-            <Route path="/tempobook/*" element={<div />} />
-          )}
           <Route
             path="/"
             element={
