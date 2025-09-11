@@ -14,6 +14,15 @@ function App() {
   const { user, loading, logout } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Debug logs
+  console.log("[ReciclaMT][DEBUG] App render - user:", user, "loading:", loading);
+  console.log("[ReciclaMT][DEBUG] Will render:", user ? "Dashboard" : "Home");
+
+  // Force re-render when user changes
+  useEffect(() => {
+    console.log("[ReciclaMT][DEBUG] App useEffect - user changed:", user);
+  }, [user]);
+
 
   useEffect(() => {
     // Check if user is admin based on email
@@ -54,6 +63,49 @@ function App() {
     );
   }
 
+  // Render Dashboard or Home based on authentication
+  if (user) {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center h-screen">
+            Carregando...
+          </div>
+        }
+      >
+        <div className="min-h-screen bg-syntiro-50 w-full">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Dashboard
+                  userName={user.name}
+                  userEmail={user.email || undefined}
+                  userPoints={user.points}
+                  onLogout={handleLogout}
+                  isAdmin={isAdmin}
+                />
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                user.role === "admin" ? <AdminPanel /> : <Navigate to="/" replace />
+              }
+            />
+            <Route path="/quemsomos" element={<QuemSomos />} />
+            <Route path="/oprojeto" element={<OProjeto />} />
+            <Route path="/pre-lancamento" element={<PreLaunchLanding />} />
+            <Route path="/lancamento" element={<PreLaunchLanding />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          </Routes>
+        </div>
+        <Toaster />
+      </Suspense>
+    );
+  }
+
+  // Render Home for unauthenticated users
   return (
     <Suspense
       fallback={
@@ -67,27 +119,11 @@ function App() {
           <Route
             path="/"
             element={
-              user ? (
-                <Dashboard
-                  userName={user.name}
-                  userEmail={user.email || undefined}
-                  userPoints={user.points}
-                  onLogout={handleLogout}
-                  isAdmin={isAdmin}
-                />
-              ) : (
-                <Home
-                  isAuthenticated={!!user}
-                  onLogin={handleLogin}
-                  onRegister={handleRegister}
-                />
-              )
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              user && user.role === "admin" ? <AdminPanel /> : <Navigate to="/" replace />
+              <Home
+                isAuthenticated={!!user}
+                onLogin={handleLogin}
+                onRegister={handleRegister}
+              />
             }
           />
           <Route path="/quemsomos" element={<QuemSomos />} />

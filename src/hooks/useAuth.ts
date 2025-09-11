@@ -38,60 +38,17 @@ function traduzirErroSupabase(mensagem: string): string {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if user is stored in localStorage
+  const [user, setUser] = useState<User | null>(() => {
+    // Initialize user from localStorage if available
     const storedUser = localStorage.getItem("reciclamt_user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    // Don't set loading to false immediately - let the auth state change handle it
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+  const [loading, setLoading] = useState(false); // Start as false since we check localStorage immediately
 
-    // Listen for auth state changes from Supabase
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("[ReciclaMT][DEBUG] Auth state changed:", event, session?.user?.email);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          // User signed in, get their profile from database
-          const { data: userProfile, error: profileError } = await supabase
-            .from("users")
-            .select("*")
-            .eq("email", session.user.email)
-            .single();
-
-          if (!profileError && userProfile) {
-            const userData = {
-              ...userProfile,
-              role: userProfile.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userProfile.email) ? "admin" : "user"),
-            };
-            setUser(userData);
-            localStorage.setItem("reciclamt_user", JSON.stringify(userData));
-          }
-        } else if (event === 'SIGNED_OUT') {
-          // User signed out
-          setUser(null);
-          localStorage.removeItem("reciclamt_user");
-        }
-        
-        // Always set loading to false after auth state change
-        setLoading(false);
-      }
-    );
-
-    // Set loading to false after a timeout as fallback
-    const timeout = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-
-    // Cleanup subscription on unmount
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(timeout);
-    };
-  }, []);
+  // Simple auth state management - no complex listeners
+  useEffect(() => {
+    console.log("[ReciclaMT][DEBUG] User state changed:", user);
+  }, [user]);
 
   const login = async (identifier: string, password?: string) => {
     try {
@@ -112,6 +69,8 @@ export function useAuth() {
           .eq("email", cleanIdentifier)
           .single();
 
+        console.log("[ReciclaMT][DEBUG] Database query result:", { userProfile, profileError });
+
         if (!profileError && userProfile) {
           // User exists in database, proceed with local authentication
           const userData = {
@@ -119,14 +78,23 @@ export function useAuth() {
             role: userProfile.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userProfile.email) ? "admin" : "user"),
           };
 
+          console.log("[ReciclaMT][DEBUG] About to set user:", userData);
           setUser(userData);
           localStorage.setItem("reciclamt_user", JSON.stringify(userData));
+          setLoading(false);
           console.log("[ReciclaMT][DEBUG] User set successfully:", userData);
+          
+          // Force page refresh to ensure proper navigation
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
+          
           return { user: userData, error: null };
         }
 
         // If user not found in database, try Supabase Auth as fallback
         console.log("[ReciclaMT][DEBUG] User not found in database, trying Supabase Auth");
+        console.log("[ReciclaMT][DEBUG] Profile error:", profileError);
         try {
           const { data, error } = await supabase.auth.signInWithPassword({
             email: cleanIdentifier,
@@ -157,7 +125,9 @@ export function useAuth() {
         }
 
         // If both methods failed
-        return { user: null, error: { message: traduzirErroSupabase("E-mail ou senha incorretos") } };
+        console.log("[ReciclaMT][DEBUG] Both login methods failed");
+        setLoading(false);
+        return { user: null, error: { message: "Usuário não encontrado. Verifique se o email está correto ou registre-se primeiro." } };
 
       } else {
         // For phone login, try to find user in database
@@ -169,6 +139,7 @@ export function useAuth() {
 
         if (profileError || !userProfile) {
           console.error("[ReciclaMT][ERROR] Phone login error:", profileError);
+          setLoading(false);
           return { user: null, error: { message: traduzirErroSupabase("Usuário não encontrado") } };
         }
 
@@ -179,13 +150,19 @@ export function useAuth() {
 
         setUser(userData);
         localStorage.setItem("reciclamt_user", JSON.stringify(userData));
+        setLoading(false);
+        
+        // Force page refresh to ensure proper navigation
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+        
         return { user: userData, error: null };
       }
     } catch (error: any) {
       console.error("[ReciclaMT][ERROR] Login exception:", error);
-      return { user: null, error: { message: traduzirErroSupabase(error?.message || "Erro no login") } };
-    } finally {
       setLoading(false);
+      return { user: null, error: { message: traduzirErroSupabase(error?.message || "Erro no login") } };
     }
   };
 

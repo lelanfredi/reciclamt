@@ -82,6 +82,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const stats = getRecyclingStats();
 
   const handleLogout = () => {
+    console.log("[ReciclaMT][DEBUG] Logout button clicked");
     logout();
     onLogout();
   };
@@ -107,7 +108,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <div className="w-64 border-r bg-card p-4 flex flex-col">
+      <div className="w-64 border-r bg-card p-4 flex flex-col h-full">
         <div className="flex items-center justify-center mb-8 mt-4">
           <h2 className="text-2xl font-bold text-primary">ReciclaMT</h2>
         </div>
@@ -187,7 +188,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
         </nav>
 
-        <Button variant="outline" className="mt-auto" onClick={handleLogout}>
+        <Button 
+          variant="outline" 
+          className="mt-auto w-full justify-start cursor-pointer hover:bg-red-50 hover:text-red-600" 
+          onClick={handleLogout}
+        >
           <LogOut className="mr-2 h-5 w-5" />
           Sair
         </Button>
