@@ -47,7 +47,7 @@ export function useAuth() {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-    setLoading(false);
+    // Don't set loading to false immediately - let the auth state change handle it
 
     // Listen for auth state changes from Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -75,11 +75,22 @@ export function useAuth() {
           setUser(null);
           localStorage.removeItem("reciclamt_user");
         }
+        
+        // Always set loading to false after auth state change
+        setLoading(false);
       }
     );
 
+    // Set loading to false after a timeout as fallback
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
     // Cleanup subscription on unmount
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const login = async (identifier: string, password?: string) => {
@@ -110,6 +121,7 @@ export function useAuth() {
 
           setUser(userData);
           localStorage.setItem("reciclamt_user", JSON.stringify(userData));
+          console.log("[ReciclaMT][DEBUG] User set successfully:", userData);
           return { user: userData, error: null };
         }
 
