@@ -26,14 +26,23 @@ function App() {
 
   useEffect(() => {
     // Check if user is admin based on email
+    console.log("[ReciclaMT][DEBUG] Checking admin status for user:", user);
+    console.log("[ReciclaMT][DEBUG] User email:", user?.email);
+    console.log("[ReciclaMT][DEBUG] User role:", user?.role);
+    
     if (
       user?.email &&
       (user.email === "reciclamt.projeto@gmail.com" ||
         user.email === "admin@reciclamt.com" ||
         user.email === "admin@example.com")
     ) {
+      console.log("[ReciclaMT][DEBUG] User is admin by email");
+      setIsAdmin(true);
+    } else if (user?.role === "admin") {
+      console.log("[ReciclaMT][DEBUG] User is admin by role");
       setIsAdmin(true);
     } else {
+      console.log("[ReciclaMT][DEBUG] User is not admin");
       setIsAdmin(false);
     }
   }, [user]);
@@ -90,7 +99,29 @@ function App() {
             <Route
               path="/admin"
               element={
-                user.role === "admin" ? <AdminPanel /> : <Navigate to="/" replace />
+                (() => {
+                  console.log("[ReciclaMT][DEBUG] Admin route check - user:", user);
+                  console.log("[ReciclaMT][DEBUG] Admin route check - user.role:", user?.role);
+                  console.log("[ReciclaMT][DEBUG] Admin route check - isAdmin:", isAdmin);
+                  
+                  // Check if user is admin by email or role
+                  const isUserAdmin = user?.email && (
+                    user.email === "reciclamt.projeto@gmail.com" ||
+                    user.email === "admin@reciclamt.com" ||
+                    user.email === "admin@example.com" ||
+                    user.email === "leticialanfredi@gmail.com"
+                  ) || user?.role === "admin";
+                  
+                  console.log("[ReciclaMT][DEBUG] isUserAdmin:", isUserAdmin);
+                  
+                  if (isUserAdmin) {
+                    console.log("[ReciclaMT][DEBUG] Rendering AdminPanel");
+                    return <AdminPanel />;
+                  } else {
+                    console.log("[ReciclaMT][DEBUG] Redirecting to home - not admin");
+                    return <Navigate to="/" replace />;
+                  }
+                })()
               }
             />
             <Route path="/quemsomos" element={<QuemSomos />} />

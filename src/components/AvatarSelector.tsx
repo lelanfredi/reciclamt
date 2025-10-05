@@ -102,7 +102,9 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({
 
   // Sincronizar selectedAvatar com currentAvatar quando ele mudar
   useEffect(() => {
+    console.log("[ReciclaMT][DEBUG] AvatarSelector - currentAvatar changed:", currentAvatar);
     const newSelectedAvatar = avatarOptions.find((avatar) => avatar.seed === currentAvatar) || avatarOptions[0];
+    console.log("[ReciclaMT][DEBUG] AvatarSelector - setting selectedAvatar to:", newSelectedAvatar.seed);
     setSelectedAvatar(newSelectedAvatar);
   }, [currentAvatar]);
 

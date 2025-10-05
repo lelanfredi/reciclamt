@@ -214,7 +214,7 @@ export function RecyclingForm({ onSuccess }: RecyclingFormProps) {
                     <FormLabel>Local (opcional)</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Ex: Ecoponto Shopping Cuiabá"
+                        placeholder="Ex: Câmara Municipal de Cuiabá"
                         {...field}
                       />
                     </FormControl>

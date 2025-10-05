@@ -62,11 +62,11 @@ const sampleRewards = [
 // Sample ecopoints data
 const sampleEcopoints = [
   {
-    name: "Ecoponto Piloto - Assembleia Legislativa de Mato Grosso",
+    name: "Ecoponto Piloto - Câmara Municipal de Cuiabá",
     address:
-      "Av. André Maggi, 6 - Centro Político Administrativo, Cuiabá - MT, 78049-901",
-    latitude: -15.5692,
-    longitude: -56.0812,
+      "Praça Barão de Melgaço, s/n - Centro, Cuiabá - MT, 78020-400",
+    latitude: -15.6014,
+    longitude: -56.0979,
     accepted_materials: ["Plástico", "Papel", "Vidro", "Metal"],
     operating_hours: "Segunda a Sexta: 8h às 17h",
     contact_info: "Telefone: (65) 3313-6000",

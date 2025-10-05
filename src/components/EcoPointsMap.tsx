@@ -13,7 +13,7 @@ interface EcoPointsMapProps {}
 export const EcoPointsMap: React.FC<EcoPointsMapProps> = () => {
   const openGoogleMaps = () => {
     const url =
-      "https://www.google.com/maps/place/Assembleia+Legislativa+do+Estado+de+Mato+Grosso/@-15.5692,-56.0838,17z/data=!3m1!4b1!4m6!3m5!1s0x939db1a7a5e9d0d1:0x3f5c3e23d1d93c63!8m2!3d-15.5692!4d-56.0812!16s%2Fg%2F1tfjvs0h";
+      "https://www.google.com/maps/place/C%C3%A2mara+Municipal+de+Cuiab%C3%A1/@-15.6014,-56.0979,17z/data=!3m1!4b1!4m6!3m5!1s0x939db1a7a5e9d0d1:0x3f5c3e23d1d93c63!8m2!3d-15.6014!4d-56.0953!16s%2Fg%2F1tfjvs0h";
     window.open(url, "_blank");
   };
 
@@ -22,11 +22,10 @@ export const EcoPointsMap: React.FC<EcoPointsMapProps> = () => {
       <CardHeader className="pb-4">
         <div>
           <CardTitle className="text-2xl font-bold text-gray-900">
-            Ecoponto Piloto - Assembleia Legislativa de Mato Grosso
+            Ecoponto Piloto - Câmara Municipal de Cuiabá
           </CardTitle>
           <CardDescription className="text-gray-600">
-            Av. André Maggi, 6 - Centro Político Administrativo, Cuiabá - MT,
-            78049-901
+            Praça Barão de Melgaço, s/n - Centro, Cuiabá - MT, 78020-400
           </CardDescription>
         </div>
       </CardHeader>
@@ -34,14 +33,14 @@ export const EcoPointsMap: React.FC<EcoPointsMapProps> = () => {
         <div className="relative w-full h-[450px] bg-gray-100 rounded-xl overflow-hidden">
           {/* Google Maps iframe */}
           <iframe
-            title="Ecoponto Piloto - ALMT"
+            title="Ecoponto Piloto - Câmara Municipal de Cuiabá"
             width="100%"
             height="100%"
             frameBorder="0"
             style={{ border: 0 }}
             referrerPolicy="no-referrer-when-downgrade"
             allowFullScreen
-            src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Assembleia+Legislativa+de+Mato+Grosso,Av.+André+Maggi,+6+-+Centro+Político+Administrativo,+Cuiabá+-+MT,78049-901"
+            src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Câmara+Municipal+de+Cuiabá,Praça+Barão+de+Melgaço,+s/n+-+Centro,+Cuiabá+-+MT,78020-400"
           />
 
           {/* Google Maps link button */}

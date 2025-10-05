@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SeedDatabaseButton } from "./SeedDatabaseButton";
+
+// Debug log
+console.log("[ReciclaMT][DEBUG] AdminPanel component loaded");
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -70,6 +73,8 @@ const initialRewards: Reward[] = [];
 const initialUsers: User[] = [];
 
 export function AdminPanel() {
+  console.log("[ReciclaMT][DEBUG] AdminPanel function called");
+  
   const [activeTab, setActiveTab] = useState("rewards");
   const [rewards, setRewards] = useState<Reward[]>(initialRewards);
 

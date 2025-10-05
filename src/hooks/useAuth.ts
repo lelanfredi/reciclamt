@@ -41,13 +41,17 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(() => {
     // Initialize user from localStorage if available
     const storedUser = localStorage.getItem("reciclamt_user");
-    return storedUser ? JSON.parse(storedUser) : null;
+    const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+    console.log("[ReciclaMT][DEBUG] useAuth initialized with user:", parsedUser);
+    console.log("[ReciclaMT][DEBUG] useAuth initialized with avatar_seed:", parsedUser?.avatar_seed);
+    return parsedUser;
   });
   const [loading, setLoading] = useState(false); // Start as false since we check localStorage immediately
 
   // Simple auth state management - no complex listeners
   useEffect(() => {
     console.log("[ReciclaMT][DEBUG] User state changed:", user);
+    console.log("[ReciclaMT][DEBUG] User avatar_seed:", user?.avatar_seed);
   }, [user]);
 
   const login = async (identifier: string, password?: string) => {
@@ -84,10 +88,10 @@ export function useAuth() {
           setLoading(false);
           console.log("[ReciclaMT][DEBUG] User set successfully:", userData);
           
-          // Force page refresh to ensure proper navigation
-          setTimeout(() => {
-            window.location.reload();
-          }, 100);
+          // TEMPORARILY DISABLED: Force page refresh to ensure proper navigation
+          // setTimeout(() => {
+          //   window.location.reload();
+          // }, 100);
           
           return { user: userData, error: null };
         }
@@ -152,10 +156,10 @@ export function useAuth() {
         localStorage.setItem("reciclamt_user", JSON.stringify(userData));
         setLoading(false);
         
-        // Force page refresh to ensure proper navigation
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
+        // TEMPORARILY DISABLED: Force page refresh to ensure proper navigation
+        // setTimeout(() => {
+        //   window.location.reload();
+        // }, 100);
         
         return { user: userData, error: null };
       }
@@ -326,6 +330,7 @@ export function useAuth() {
 
     try {
       console.log("[ReciclaMT][DEBUG] Updating avatar to:", avatarSeed);
+      console.log("[ReciclaMT][DEBUG] Current user before update:", user);
       
       // Update avatar in database - try by ID first, then by email as fallback
       let { data, error } = await supabase
@@ -360,19 +365,29 @@ export function useAuth() {
         console.log("[ReciclaMT][DEBUG] Continuing with local update only");
         // Continue with local update even if database update fails
       } else {
-        console.log("[ReciclaMT][DEBUG] Avatar updated in database successfully");
+        console.log("[ReciclaMT][DEBUG] Avatar updated in database successfully:", data);
       }
 
+      // Create updated user object
       const updatedUser = {
         ...user,
         avatar_seed: avatarSeed,
         updated_at: new Date().toISOString(),
       };
 
+      console.log("[ReciclaMT][DEBUG] About to update user state with:", updatedUser);
+      
+      // Update state and localStorage
       setUser(updatedUser);
       localStorage.setItem("reciclamt_user", JSON.stringify(updatedUser));
       
+      // Verify the update
+      const storedUser = JSON.parse(localStorage.getItem("reciclamt_user") || "{}");
       console.log("[ReciclaMT][DEBUG] Avatar updated successfully:", updatedUser.avatar_seed);
+      console.log("[ReciclaMT][DEBUG] User state updated:", updatedUser);
+      console.log("[ReciclaMT][DEBUG] LocalStorage updated with:", storedUser);
+      console.log("[ReciclaMT][DEBUG] Stored avatar_seed:", storedUser.avatar_seed);
+      
       return { user: updatedUser, error: null };
     } catch (error: any) {
       console.error("[ReciclaMT][ERROR] Avatar update exception:", error);
