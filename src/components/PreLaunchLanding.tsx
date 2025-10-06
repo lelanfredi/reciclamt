@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Users, Clock, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { applyPhoneMask, removePhoneMask } from "@/lib/masks";
 
 const PreLaunchLanding = () => {
   const [formData, setFormData] = useState({
@@ -31,7 +32,7 @@ const PreLaunchLanding = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'phone' ? applyPhoneMask(value) : value
     }));
   };
 
@@ -55,7 +56,7 @@ const PreLaunchLanding = () => {
         .insert([
           {
             name: formData.name,
-            phone: formData.phone,
+            phone: removePhoneMask(formData.phone), // Remove máscara antes de enviar
             neighborhood: formData.neighborhood,
             status: 'active'
           }

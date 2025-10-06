@@ -31,6 +31,43 @@
   - `src/components/RecyclingForm.tsx` - Placeholder do formulário
 - **Status**: ✅ Concluído
 
+### 📱 Implementação de Máscara para Telefone
+- **Funcionalidade**: Máscara automática para campos de telefone/WhatsApp
+- **Formato**: (65) 99999-9999 para celular, (65) 9999-9999 para fixo
+- **Implementação**:
+  - Criado `src/lib/masks.ts` com funções de máscara
+  - Aplicado em `AuthForms.tsx` (login/registro)
+  - Aplicado em `PreLaunchLanding.tsx` (pré-cadastro)
+  - Aplicado em `AdminPanel.tsx` (edição de usuários)
+  - Validação atualizada para aceitar telefones com máscara
+  - Máscara removida automaticamente antes de salvar no banco
+- **Arquivos modificados**: 
+  - `src/lib/masks.ts` - Novo arquivo com funções de máscara
+  - `src/components/AuthForms.tsx` - Máscara no formulário de registro
+  - `src/components/PreLaunchLanding.tsx` - Máscara no pré-cadastro
+  - `src/components/AdminPanel.tsx` - Máscara na edição de usuários
+- **Status**: ✅ Concluído
+
+### 🐛 Correção do Registro - Navegação
+- **Problema**: Após registro bem-sucedido, usuário não era redirecionado para o Dashboard
+- **Causa**: Mesmo problema do login - App não re-renderizava após `setUser`
+- **Solução**: Adicionado refresh automático após registro bem-sucedido
+- **Implementação**:
+  - Adicionado `setLoading(false)` antes do refresh
+  - Adicionado `window.location.reload()` com timeout de 100ms
+  - Mantida consistência com a solução do login
+- **Arquivos modificados**: `src/hooks/useAuth.ts`
+- **Status**: ✅ Concluído
+
+### 🎨 Ajuste Visual - Botões de Ação
+- **Alteração**: Invertido destaque visual dos botões "Desativar" e "Excluir"
+- **Mudança**: 
+  - Botão "Desativar" agora tem destaque vermelho (`variant="destructive"`)
+  - Botão "Excluir" agora é discreto (`variant="ghost"`)
+- **Localização**: Painel Admin - Seção de Recompensas
+- **Arquivos modificados**: `src/components/AdminPanel.tsx`
+- **Status**: ✅ Concluído
+
 ### 📚 Estrutura de Documentação
 - **Criado**: Sistema completo de documentação na pasta `_docs/`
 - **Arquivos criados**:

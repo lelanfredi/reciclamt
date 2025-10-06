@@ -48,6 +48,7 @@ import {
 import { useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
+import { applyPhoneMask, removePhoneMask } from "@/lib/masks";
 
 interface Reward {
   id: string;
@@ -399,7 +400,7 @@ export function AdminPanel() {
     // Atualizar no Supabase
     const { error } = await supabase.from("users").update({
       name: userForm.name,
-      phone: userForm.phone,
+      phone: removePhoneMask(userForm.phone), // Remove máscara antes de enviar
       points: Number(userForm.points),
       role: userForm.role,
     }).eq("id", currentUser.id);
@@ -774,7 +775,7 @@ export function AdminPanel() {
 
                   <div className="flex gap-2">
                     <Button
-                      variant="ghost"
+                      variant="destructive"
                       size="sm"
                       onClick={() => toggleRewardAvailability(reward.id)}
                     >
@@ -788,7 +789,7 @@ export function AdminPanel() {
 
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
+                        <Button variant="ghost" size="sm">
                           <Trash2 className="h-4 w-4 mr-1" /> Excluir
                         </Button>
                       </AlertDialogTrigger>
@@ -953,9 +954,16 @@ export function AdminPanel() {
               <Input
                 id="edit-user-phone"
                 name="phone"
-                value={userForm.phone}
-                onChange={handleUserFormChange}
+                value={applyPhoneMask(userForm.phone)}
+                onChange={(e) => {
+                  const maskedValue = applyPhoneMask(e.target.value);
+                  setUserForm(prev => ({
+                    ...prev,
+                    phone: maskedValue
+                  }));
+                }}
                 className="col-span-3"
+                placeholder="(65) 99999-9999"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">

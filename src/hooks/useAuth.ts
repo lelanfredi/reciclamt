@@ -255,6 +255,13 @@ export function useAuth() {
 
       setUser(newUser);
       localStorage.setItem("reciclamt_user", JSON.stringify(newUser));
+      setLoading(false);
+      
+      // Force page refresh to ensure proper navigation
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+      
       return { user: newUser, error: null };
 
     } catch (error: any) {
