@@ -146,21 +146,22 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({
   };
 
   const getAvatarUrl = (seed: string) => {
-    // Configuração para personagens com expressão neutra e cores da natureza
-    const skinColors = {
-      "floresta-feliz": "D4A574",
-      "sol-radiante": "F4C2A1",
-      "oceano-sereno": "E8B4A0",
-      "lavanda-suave": "F2D7D5",
-      "cerejeira-doce": "F8D7DA",
-      "terra-fertil": "D2B48C",
-      "brisa-fresca": "E6F3F7",
-      "folha-verde": "E8F5E8",
+    // Mapeamento de seeds para cores específicas do tema ReciclaMT
+    const colorSchemes = {
+      "floresta-feliz": "7ED321,4A90E2,F5A623,9013FE,FF6B9D", // Verde, azul, laranja, roxo, rosa
+      "sol-radiante": "F5A623,FF6B9D,7ED321,4A90E2,9013FE", // Laranja, rosa, verde, azul, roxo
+      "oceano-sereno": "4A90E2,7ED321,F5A623,FF6B9D,9013FE", // Azul, verde, laranja, rosa, roxo
+      "lavanda-suave": "9013FE,FF6B9D,4A90E2,7ED321,F5A623", // Roxo, rosa, azul, verde, laranja
+      "cerejeira-doce": "FF6B9D,9013FE,7ED321,4A90E2,F5A623", // Rosa, roxo, verde, azul, laranja
+      "terra-fertil": "7ED321,F5A623,4A90E2,9013FE,FF6B9D", // Verde, laranja, azul, roxo, rosa
+      "brisa-fresca": "4A90E2,9013FE,7ED321,FF6B9D,F5A623", // Azul, roxo, verde, rosa, laranja
+      "folha-verde": "7ED321,4A90E2,F5A623,FF6B9D,9013FE", // Verde, azul, laranja, rosa, roxo
     };
 
-    const skinColor = skinColors[seed as keyof typeof skinColors] || "D4A574";
-
-    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=transparent&skinColor=${skinColor}&mouthType=default&eyeType=default&eyebrowType=default&facialHairType=blank&clothesColor=7ED321,4A90E2,F5A623,9013FE,FF6B9D&hairColor=8B4513,654321,D2691E,228B22&topType=shortHair,longHair,curly&clothesType=hoodie,sweater,shirt&accessoriesType=blank&hatColor=228B22,8B4513,4A90E2`;
+    const colors = colorSchemes[seed as keyof typeof colorSchemes] || "7ED321,4A90E2,F5A623,9013FE,FF6B9D";
+    
+    // Usar DiceBear Lorelei - avatares amigáveis e coloridos!
+    return `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}&backgroundColor=${colors.split(',')[0]}&size=120`;
   };
 
   return (

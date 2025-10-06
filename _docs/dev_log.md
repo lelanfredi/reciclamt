@@ -68,6 +68,105 @@
 - **Arquivos modificados**: `src/components/AdminPanel.tsx`
 - **Status**: ✅ Concluído
 
+### 😊 Ajuste Visual - Avatares com Sorriso
+- **Alteração**: Todas as bocas dos avatares agora são sorrisos
+- **Mudança**: 
+  - Alterado `mouthType=default` para `mouthType=smile` na API DiceBear
+  - Todos os avatares agora têm expressão mais amigável e positiva
+- **Localização**: Componente AvatarSelector - Geração de avatares
+- **Arquivos modificados**: `src/components/AvatarSelector.tsx`
+- **Status**: ✅ Concluído
+
+### 🎨 Substituição de Biblioteca de Avatares
+- **Problema**: Avatares da DiceBear Avataaars pareciam "zumbis" com expressões estranhas
+- **Solução**: Migração para Boring Avatars - biblioteca mais alegre e colorida
+- **Mudanças**:
+  - Substituída API DiceBear Avataaars por Boring Avatars
+  - Padrão "beam" - avatares geométricos coloridos e alegres
+  - Cores personalizadas para cada tema (Floresta, Sol, Oceano, etc.)
+  - Sem expressões faciais estranhas - apenas padrões geométricos felizes
+- **Benefícios**:
+  - Avatares mais alegres e amigáveis
+  - Cores vibrantes e positivas
+  - Sem problemas de expressões faciais
+  - Melhor experiência visual
+- **Arquivos modificados**: `src/components/AvatarSelector.tsx`
+- **Status**: ✅ Concluído
+
+### 😊 Implementação de Avatares com Rostos Felizes
+- **Solicitação**: Usuário queria avatares com carinhas (rostos) mas felizes
+- **Solução**: Migração para DiceBear Personas - estilo com rostos amigáveis
+- **Mudanças**:
+  - Substituída API Boring Avatars por DiceBear Personas
+  - Estilo "personas" - avatares com rostos humanos amigáveis
+  - Configurações forçadas para expressões felizes:
+    - `mouth=smile` - sempre sorriso
+    - `eyes=happy` - olhos felizes
+    - `eyebrows=raised` - sobrancelhas levantadas (alegres)
+  - Cores personalizadas por tema mantidas
+  - Sem acessórios estranhos (`accessories=none`)
+- **Benefícios**:
+  - Rostos humanos amigáveis e felizes
+  - Expressões consistentemente positivas
+  - Personalização por tema mantida
+  - Melhor identificação com os usuários
+- **Arquivos modificados**: `src/components/AvatarSelector.tsx`
+- **Status**: ❌ Não funcionou - avatares ainda "sofridos"
+
+### 🎨 Segunda Tentativa - Multiavatar
+- **Problema**: DiceBear Personas ainda gerava expressões "sofridas"
+- **Solução**: Migração para Multiavatar - API com rostos mais amigáveis
+- **Mudanças**:
+  - Substituída API DiceBear Personas por Multiavatar
+  - API `multiavatar.com` - conhecida por avatares mais alegres
+  - Cores personalizadas por tema mantidas
+  - Sem configurações complexas - API gera automaticamente rostos amigáveis
+- **Benefícios**:
+  - API especializada em avatares amigáveis
+  - Menos configurações = menos chance de erro
+  - Cores personalizadas mantidas
+  - Rostos consistentemente positivos
+- **Arquivos modificados**: `src/components/AvatarSelector.tsx`
+- **Status**: ❌ Não funcionou
+
+### 😊 Solução Final - DiceBear Fun Emoji
+- **Solicitação**: Usuário indicou o estilo "Fun Emoji" da DiceBear
+- **Solução**: Implementação do estilo Fun Emoji - avatares com emojis felizes
+- **Mudanças**:
+  - Substituída API Multiavatar por DiceBear Fun Emoji
+  - Estilo "fun-emoji" - avatares baseados em emojis alegres
+  - Configurações forçadas:
+    - `eyes=happy` - olhos felizes
+    - `mouth=smile` - boca sorrindo
+    - `size=120` - tamanho otimizado
+  - Cores de fundo personalizadas por tema
+- **Benefícios**:
+  - Emojis são naturalmente felizes e amigáveis
+  - Sem expressões "sofridas" ou estranhas
+  - Cores vibrantes e positivas
+  - Perfeito para o tema ReciclaMT
+- **Documentação**: [DiceBear Fun Emoji](https://www.dicebear.com/styles/fun-emoji/)
+- **Arquivos modificados**: `src/components/AvatarSelector.tsx`
+- **Status**: ❌ Não funcionou - mostrava apenas letras
+
+### 🎨 Correção - DiceBear Lorelei
+- **Problema**: Fun Emoji não funcionou - mostrava apenas letras
+- **Solução**: Migração para DiceBear Lorelei - estilo amigável e confiável
+- **Mudanças**:
+  - Substituída API Fun Emoji por DiceBear Lorelei
+  - Estilo "lorelei" - avatares com rostos amigáveis e coloridos
+  - Configurações simples:
+    - `backgroundColor` - cor de fundo por tema
+    - `size=120` - tamanho otimizado
+  - Cores de fundo personalizadas mantidas
+- **Benefícios**:
+  - Estilo confiável e testado
+  - Rostos amigáveis e coloridos
+  - Sem problemas de renderização
+  - Cores vibrantes por tema
+- **Arquivos modificados**: `src/components/AvatarSelector.tsx`
+- **Status**: ✅ Implementado
+
 ### 📚 Estrutura de Documentação
 - **Criado**: Sistema completo de documentação na pasta `_docs/`
 - **Arquivos criados**:
