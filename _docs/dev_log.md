@@ -167,6 +167,21 @@
 - **Arquivos modificados**: `src/components/AvatarSelector.tsx`
 - **Status**: ✅ Implementado
 
+### 🗑️ Correção - Exclusão de Recompensas
+- **Problema**: Recompensas "excluídas" voltavam após atualizar a página
+- **Causa**: Função `deleteReward` apenas marcava como "desativado", mas `fetchRewards` buscava todas as recompensas
+- **Solução**: Filtrar recompensas desativadas na busca do banco
+- **Mudanças**:
+  - Adicionado filtro `.neq("status", "desativado")` na query de busca
+  - Recompensas desativadas não aparecem mais na lista
+  - Exclusão funciona corretamente (soft delete)
+- **Benefícios**:
+  - Exclusão de recompensas funciona permanentemente
+  - Dados não são perdidos (soft delete)
+  - Interface consistente após refresh
+- **Arquivos modificados**: `src/components/AdminPanel.tsx`
+- **Status**: ✅ Concluído
+
 ### 📚 Estrutura de Documentação
 - **Criado**: Sistema completo de documentação na pasta `_docs/`
 - **Arquivos criados**:

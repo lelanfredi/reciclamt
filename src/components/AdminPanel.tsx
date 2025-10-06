@@ -82,7 +82,11 @@ export function AdminPanel() {
   // Buscar recompensas do Supabase ao carregar o painel
   useEffect(() => {
     const fetchRewards = async () => {
-      const { data, error } = await supabase.from("rewards").select("*");
+      // Buscar apenas recompensas ativas (não desativadas)
+      const { data, error } = await supabase
+        .from("rewards")
+        .select("*")
+        .neq("status", "desativado");
       console.log("Recompensas do Supabase:", data, error);
       if (!error && data) {
         // Mapear campos snake_case para camelCase e ajustar available
