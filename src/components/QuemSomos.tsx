@@ -359,7 +359,7 @@ const QuemSomos = () => {
               </p>
               <div className="flex flex-wrap gap-4">
                 <a
-                  href="https://drive.google.com/file/d/178mw3jgLN9C-857Bh7F-MGyGScBM0Irx/view?usp=sharing"
+                  href="https://drive.google.com/file/d/1E5o5CNavofV-_IyRVs3_133h2FwoNWPk"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-white flex items-center gap-1"

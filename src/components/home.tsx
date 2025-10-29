@@ -545,7 +545,7 @@ const Home = ({
                 className="mt-6 bg-white text-syntiro-600 hover:bg-gray-100 font-semibold px-8 py-3 rounded-xl"
                 onClick={() =>
                   window.open(
-                    "https://drive.google.com/file/d/178mw3jgLN9C-857Bh7F-MGyGScBM0Irx/view?usp=sharing",
+                    "https://drive.google.com/file/d/1E5o5CNavofV-_IyRVs3_133h2FwoNWPk",
                     "_blank",
                   )
                 }
@@ -1058,7 +1058,7 @@ const Home = ({
               </p>
               <div className="flex flex-wrap gap-4">
                 <a
-                  href="https://drive.google.com/file/d/178mw3jgLN9C-857Bh7F-MGyGScBM0Irx/view?usp=sharing"
+                  href="https://drive.google.com/file/d/1E5o5CNavofV-_IyRVs3_133h2FwoNWPk"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-white flex items-center gap-1"
