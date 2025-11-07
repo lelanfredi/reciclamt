@@ -94,12 +94,6 @@ const Home = ({
           </div>
 
           <nav className="hidden md:flex items-center gap-6">
-            <Link
-              to="/pre-lancamento"
-              className="text-sm font-medium text-green-600 hover:text-green-700 bg-green-50 px-4 py-2 rounded-full transition-colors"
-            >
-              🚀 Pré-lançamento
-            </Link>
             <button
               onClick={() => handleScroll("hero")}
               className={`text-sm font-medium ${activeSection === "hero" ? "text-syntiro-600" : "text-gray-600 hover:text-syntiro-600"}`}
@@ -940,10 +934,10 @@ const Home = ({
                 Email
               </h3>
               <a
-                href="mailto:contato@reciclamt.com.br"
+                href="mailto:reciclamt.projeto@gmail.com"
                 className="text-syntiro-600 hover:text-syntiro-700 font-medium text-lg"
               >
-                contato@reciclamt.com.br
+                reciclamt.projeto@gmail.com
               </a>
             </motion.div>
 

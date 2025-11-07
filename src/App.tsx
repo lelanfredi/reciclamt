@@ -5,7 +5,6 @@ import Dashboard from "./components/Dashboard";
 import AdminPanel from "./components/AdminPanel";
 import QuemSomos from "./components/QuemSomos";
 import OProjeto from "./components/OProjeto";
-import PreLaunchLanding from "./components/PreLaunchLanding";
 import { ResetPassword } from "./components/ResetPassword";
 import { useAuth } from "./hooks/useAuth";
 import { Toaster } from "@/components/ui/toaster";
@@ -126,8 +125,6 @@ function App() {
             />
             <Route path="/quemsomos" element={<QuemSomos />} />
             <Route path="/oprojeto" element={<OProjeto />} />
-            <Route path="/pre-lancamento" element={<PreLaunchLanding />} />
-            <Route path="/lancamento" element={<PreLaunchLanding />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
         </div>
@@ -159,8 +156,6 @@ function App() {
           />
           <Route path="/quemsomos" element={<QuemSomos />} />
           <Route path="/oprojeto" element={<OProjeto />} />
-          <Route path="/pre-lancamento" element={<PreLaunchLanding />} />
-          <Route path="/lancamento" element={<PreLaunchLanding />} />
           <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </div>

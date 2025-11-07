@@ -911,7 +911,7 @@ export function AdminPanel() {
                   <Label htmlFor="contact-email">Email de Contato</Label>
                   <Input
                     id="contact-email"
-                    defaultValue="contato@reciclamt.com"
+                    defaultValue="reciclamt.projeto@gmail.com"
                   />
                 </div>
                 <div className="space-y-2">
