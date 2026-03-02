@@ -6,6 +6,7 @@ import AdminPanel from "./components/AdminPanel";
 import QuemSomos from "./components/QuemSomos";
 import OProjeto from "./components/OProjeto";
 import { useAuth } from "./hooks/useAuth";
+import { ADMIN_EMAILS } from "./config/constants";
 
 function App() {
   const { user, loading, logout } = useAuth();
@@ -31,12 +32,7 @@ function App() {
 
   useEffect(() => {
     // Check if user is admin based on email
-    if (
-      user?.email &&
-      (user.email === "reciclamt.projeto@gmail.com" ||
-        user.email === "admin@reciclamt.com" ||
-        user.email === "admin@example.com")
-    ) {
+    if (user?.email && ADMIN_EMAILS.includes(user.email)) {
       setIsAdmin(true);
     } else {
       setIsAdmin(false);

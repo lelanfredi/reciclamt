@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Tables } from "../types/supabase";
+import { generateRedemptionCode } from "../utils/redemptionCode";
 
 type Reward = Tables<"rewards">;
 type RewardRedemption = Tables<"reward_redemptions">;
@@ -44,7 +45,7 @@ export function useRewards() {
       }
 
       // Generate redemption code
-      const redemptionCode = `REC${Date.now().toString().slice(-6)}`;
+      const redemptionCode = generateRedemptionCode();
 
       // Create redemption record
       const { error: redemptionError } = await supabase

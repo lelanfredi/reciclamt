@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Tables } from "../types/supabase";
+import { ADMIN_EMAILS, DEFAULT_AVATAR } from "../config/constants";
 
 type User = Tables<"users"> & { role?: string };
 
@@ -81,8 +82,8 @@ export function useAuth() {
             email: data.user.email || cleanIdentifier,
             phone: data.user.user_metadata?.phone || "",
             points: 0,
-            avatar_seed: "felix",
-            role: ["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(data.user.email) ? "admin" : "user",
+            avatar_seed: DEFAULT_AVATAR,
+            role: ADMIN_EMAILS.includes(data.user.email) ? "admin" : "user",
             created_at: data.user.created_at,
             updated_at: new Date().toISOString(),
           };
@@ -90,7 +91,7 @@ export function useAuth() {
           // Use existing profile data
           userData = {
             ...userProfile,
-            role: userProfile.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userProfile.email) ? "admin" : "user"),
+            role: userProfile.role || (ADMIN_EMAILS.includes(userProfile.email) ? "admin" : "user"),
           };
         }
 
@@ -192,8 +193,8 @@ export function useAuth() {
           email: userData.email,
           phone: userData.phone,
           points: 0,
-          avatar_seed: "felix",
-          role: ["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userData.email) ? "admin" : "user",
+          avatar_seed: DEFAULT_AVATAR,
+          role: ADMIN_EMAILS.includes(userData.email) ? "admin" : "user",
         })
         .select()
         .single();
@@ -213,8 +214,8 @@ export function useAuth() {
         email: userData.email,
         phone: userData.phone,
         points: newUserData?.points || 0,
-        avatar_seed: newUserData?.avatar_seed || "felix",
-        role: newUserData?.role || (["reciclamt.projeto@gmail.com", "admin@reciclamt.com", "admin@example.com"].includes(userData.email) ? "admin" : "user"),
+        avatar_seed: newUserData?.avatar_seed || DEFAULT_AVATAR,
+        role: newUserData?.role || (ADMIN_EMAILS.includes(userData.email) ? "admin" : "user"),
         created_at: createdAt,
         updated_at: new Date().toISOString(),
       };

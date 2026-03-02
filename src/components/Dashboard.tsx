@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import RewardsCatalog from "./RewardsCatalog";
+import EwasteDeliveries from "./EwasteDeliveries";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecycling } from "@/hooks/useRecycling";
 import {
@@ -27,6 +28,9 @@ import {
   Settings,
   Shield,
 } from "lucide-react";
+import { LEVEL_THRESHOLD, CO2_CONVERSION_FACTOR } from "@/config/constants";
+import { useEwasteSubmissions } from "@/hooks/useEwasteSubmissions";
+import { Smartphone } from "lucide-react";
 
 interface DashboardProps {
   userName?: string;
@@ -88,7 +92,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   // Calculate progress to next level
-  const nextLevelThreshold = 1000;
+  const nextLevelThreshold = LEVEL_THRESHOLD;
   const progressPercentage = Math.min(
     (displayPoints / nextLevelThreshold) * 100,
     100,
@@ -153,6 +157,14 @@ const Dashboard: React.FC<DashboardProps> = ({
             Histórico
           </Button>
           <Button
+            variant={activeTab === "deliveries" ? "default" : "ghost"}
+            className="w-full justify-start"
+            onClick={() => setActiveTab("deliveries")}
+          >
+            <Smartphone className="mr-2 h-5 w-5" />
+            Minhas Entregas
+          </Button>
+          <Button
             variant={activeTab === "rewards" ? "default" : "ghost"}
             className="w-full justify-start"
             onClick={() => setActiveTab("rewards")}
@@ -194,6 +206,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <TabsList className="mb-6">
             <TabsTrigger value="progress">Progresso</TabsTrigger>
             <TabsTrigger value="history">Histórico</TabsTrigger>
+            <TabsTrigger value="deliveries">Entregas</TabsTrigger>
             <TabsTrigger value="rewards">Recompensas</TabsTrigger>
             <TabsTrigger value="profile">Perfil</TabsTrigger>
           </TabsList>
@@ -292,7 +305,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="bg-primary/10 p-4 rounded-lg text-center">
                     <p className="text-3xl font-bold">
-                      {(stats.totalWeight * 0.5).toFixed(1)}kg
+                      {(stats.totalWeight * CO2_CONVERSION_FACTOR).toFixed(1)}kg
                     </p>
                     <p className="text-sm text-muted-foreground">
                       CO₂ economizado
@@ -352,6 +365,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </ScrollArea>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Deliveries Tab */}
+          <TabsContent value="deliveries">
+            <EwasteDeliveries userId={user?.id} userPhone={user?.phone} />
           </TabsContent>
 
           {/* Rewards Tab */}

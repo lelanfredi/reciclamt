@@ -7,8 +7,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ExternalLink } from "lucide-react";
+import { env } from "@/config/environment";
 
 interface EcoPointsMapProps {}
+
+const ECOPOINT_QUERY =
+  "Assembleia+Legislativa+de+Mato+Grosso,Av.+André+Maggi,+6+-+Centro+Político+Administrativo,+Cuiabá+-+MT,78049-901";
 
 export const EcoPointsMap: React.FC<EcoPointsMapProps> = () => {
   const openGoogleMaps = () => {
@@ -16,6 +20,8 @@ export const EcoPointsMap: React.FC<EcoPointsMapProps> = () => {
       "https://www.google.com/maps/place/Assembleia+Legislativa+do+Estado+de+Mato+Grosso/@-15.5692,-56.0838,17z/data=!3m1!4b1!4m6!3m5!1s0x939db1a7a5e9d0d1:0x3f5c3e23d1d93c63!8m2!3d-15.5692!4d-56.0812!16s%2Fg%2F1tfjvs0h";
     window.open(url, "_blank");
   };
+
+  const mapsApiKey = env.googleMapsApiKey;
 
   return (
     <Card className="w-full bg-white shadow-syntiro rounded-2xl overflow-hidden">
@@ -33,6 +39,7 @@ export const EcoPointsMap: React.FC<EcoPointsMapProps> = () => {
       <CardContent>
         <div className="relative w-full h-[450px] bg-gray-100 rounded-xl overflow-hidden">
           {/* Google Maps iframe */}
+          {mapsApiKey ? (
           <iframe
             title="Ecoponto Piloto - ALMT"
             width="100%"
@@ -41,8 +48,13 @@ export const EcoPointsMap: React.FC<EcoPointsMapProps> = () => {
             style={{ border: 0 }}
             referrerPolicy="no-referrer-when-downgrade"
             allowFullScreen
-            src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Assembleia+Legislativa+de+Mato+Grosso,Av.+André+Maggi,+6+-+Centro+Político+Administrativo,+Cuiabá+-+MT,78049-901"
+            src={`https://www.google.com/maps/embed/v1/place?key=${mapsApiKey}&q=${ECOPOINT_QUERY}`}
           />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              Mapa indisponível (API key não configurada)
+            </div>
+          )}
 
           {/* Google Maps link button */}
           <div className="absolute bottom-4 right-4 z-10">

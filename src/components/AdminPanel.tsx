@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { EwasteValidationTab } from "./EwasteValidationTab";
 
 interface Reward {
   id: string;
@@ -328,10 +329,11 @@ export function AdminPanel() {
         onValueChange={setActiveTab}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-3 mb-8">
-          <TabsTrigger value="rewards">Gerenciar Recompensas</TabsTrigger>
-          <TabsTrigger value="users">Gerenciar Usuários</TabsTrigger>
-          <TabsTrigger value="settings">Configurações do Sistema</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsTrigger value="rewards">Recompensas</TabsTrigger>
+          <TabsTrigger value="validations">Validações</TabsTrigger>
+          <TabsTrigger value="users">Usuários</TabsTrigger>
+          <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
 
         {/* Rewards Management Tab */}
@@ -714,6 +716,16 @@ export function AdminPanel() {
           )}
         </TabsContent>
 
+        {/* E-waste Validations Tab */}
+        <TabsContent value="validations" className="space-y-4">
+          <EwasteValidationTab
+            adminEmail={
+              JSON.parse(localStorage.getItem("reciclamt_user") || "{}")?.email ||
+              "admin@reciclamt.com.br"
+            }
+          />
+        </TabsContent>
+
         {/* Users Management Tab */}
         <TabsContent value="users" className="space-y-4">
           <div className="flex justify-between items-center mb-6">
@@ -790,7 +802,7 @@ export function AdminPanel() {
                   <Label htmlFor="contact-email">Email de Contato</Label>
                   <Input
                     id="contact-email"
-                    defaultValue="contato@reciclamt.com"
+                    defaultValue="contato@reciclamt.com.br"
                   />
                 </div>
                 <div className="space-y-2">

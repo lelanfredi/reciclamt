@@ -134,6 +134,53 @@ export type Database = {
           created_at?: string;
         };
       };
+      ewaste_submissions: {
+        Row: {
+          id: string;
+          user_phone: string;
+          user_id: string | null;
+          photo_url: string;
+          material_description: string;
+          status: string;
+          admin_notes: string | null;
+          points_awarded: number;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+          campaign: string;
+          bot_conversation_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_phone: string;
+          user_id?: string | null;
+          photo_url: string;
+          material_description: string;
+          status?: string;
+          admin_notes?: string | null;
+          points_awarded?: number;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          campaign?: string;
+          bot_conversation_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_phone?: string;
+          user_id?: string | null;
+          photo_url?: string;
+          material_description?: string;
+          status?: string;
+          admin_notes?: string | null;
+          points_awarded?: number;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          campaign?: string;
+          bot_conversation_id?: string | null;
+          created_at?: string;
+        };
+      };
       ecopoints: {
         Row: {
           id: string;

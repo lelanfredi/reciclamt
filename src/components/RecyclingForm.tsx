@@ -31,6 +31,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, AlertCircle, Recycle } from "lucide-react";
 import { useRecycling } from "@/hooks/useRecycling";
 import { useAuth } from "@/hooks/useAuth";
+import { MATERIAL_TYPES } from "@/config/constants";
 
 const recyclingSchema = z.object({
   material_type: z.string().min(1, "Selecione o tipo de material"),
@@ -64,7 +65,7 @@ export function RecyclingForm({ onSuccess }: RecyclingFormProps) {
     },
   });
 
-  const materialTypes = ["Plástico", "Papel", "Vidro", "Metal", "Eletrônicos"];
+  const materialTypes = [...MATERIAL_TYPES];
 
   const onSubmit = async (data: RecyclingFormValues) => {
     if (!user) {
