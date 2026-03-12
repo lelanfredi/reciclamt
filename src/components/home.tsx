@@ -566,6 +566,137 @@ const Home = ({
           </div>
         </div>
       </section>
+
+      {/* Campanha Lixo Eletrônico */}
+      <section id="campanha-ewaste" className="py-16 md:py-24 bg-white">
+        <div className="container mx-auto px-4">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
+            <span className="inline-block bg-purple-100 text-purple-700 text-sm font-semibold px-4 py-1 rounded-full mb-4">
+              Nova Campanha
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Campanha Lixo Eletrônico
+            </h2>
+            <p className="text-gray-600 text-lg max-w-3xl mx-auto">
+              Celulares antigos, carregadores, pilhas, baterias, cabos...
+              Agora você pode descartar seus eletrônicos de forma correta e ainda ganhar pontos!
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
+            <motion.div
+              className="bg-white p-8 rounded-2xl shadow-syntiro border-t-4 border-purple-500 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">📸</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                1. Fotografe o material
+              </h3>
+              <p className="text-gray-600">
+                Tire uma foto do eletrônico que deseja descartar e envie pelo
+                nosso chatbot no WhatsApp.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="bg-white p-8 rounded-2xl shadow-syntiro border-t-4 border-purple-500 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">✅</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                2. Validação rápida
+              </h3>
+              <p className="text-gray-600">
+                Nossa equipe analisa a foto e valida o material.
+                Você recebe a confirmação direto no WhatsApp.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="bg-white p-8 rounded-2xl shadow-syntiro border-t-4 border-purple-500 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🏆</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                3. Ganhe pontos extras
+              </h3>
+              <p className="text-gray-600">
+                Eletrônicos valem 25 pontos por kg — a maior pontuação
+                entre todos os materiais!
+              </p>
+            </motion.div>
+          </div>
+
+          <motion.div
+            className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-2xl p-8 md:p-12 text-white text-center max-w-4xl mx-auto"
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
+            <h3 className="text-2xl md:text-3xl font-bold mb-4">
+              Materiais aceitos na campanha
+            </h3>
+            <div className="flex flex-wrap justify-center gap-3 mb-6">
+              {[
+                "Celulares",
+                "Tablets",
+                "Notebooks",
+                "Carregadores",
+                "Cabos",
+                "Pilhas",
+                "Baterias",
+                "Fones de ouvido",
+                "Monitores",
+              ].map((item) => (
+                <span
+                  key={item}
+                  className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+            <p className="text-purple-100 mb-6">
+              Envie uma foto pelo WhatsApp e comece a acumular pontos agora!
+            </p>
+            <Button
+              className="bg-white text-purple-700 hover:bg-purple-50 font-semibold px-8 py-3 rounded-xl text-lg"
+              onClick={() =>
+                window.open(
+                  "https://wa.me/556584424273?text=Olá! Quero participar da campanha de lixo eletrônico!",
+                  "_blank",
+                )
+              }
+            >
+              <Phone className="mr-2 h-5 w-5" />
+              Participar pelo WhatsApp
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Benefits Section */}
       <section id="benefits" className="py-16 md:py-24 bg-syntiro-50">
         <div className="container mx-auto px-4">

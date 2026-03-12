@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ExternalLink } from "lucide-react";
+import { env } from "@/config/environment";
 
 interface EcoPointsMapProps {}
 
@@ -32,16 +33,22 @@ export const EcoPointsMap: React.FC<EcoPointsMapProps> = () => {
       <CardContent>
         <div className="relative w-full h-[450px] bg-gray-100 rounded-xl overflow-hidden">
           {/* Google Maps iframe */}
-          <iframe
-            title="Ecoponto Piloto - Câmara Municipal de Cuiabá"
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            style={{ border: 0 }}
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
-            src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Câmara+Municipal+de+Cuiabá,Praça+Barão+de+Melgaço,+s/n+-+Centro,+Cuiabá+-+MT,78020-400"
-          />
+          {env.googleMapsApiKey ? (
+            <iframe
+              title="Ecoponto Piloto - Câmara Municipal de Cuiabá"
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              style={{ border: 0 }}
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              src={`https://www.google.com/maps/embed/v1/place?key=${env.googleMapsApiKey}&q=Câmara+Municipal+de+Cuiabá,Praça+Barão+de+Melgaço,+s/n+-+Centro,+Cuiabá+-+MT,78020-400`}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              <p>Mapa indisponível — chave de API não configurada.</p>
+            </div>
+          )}
 
           {/* Google Maps link button */}
           <div className="absolute bottom-4 right-4 z-10">

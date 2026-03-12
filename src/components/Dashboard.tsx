@@ -18,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import RewardsCatalog from "./RewardsCatalog";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecycling } from "@/hooks/useRecycling";
+import { LEVEL_THRESHOLD, CO2_CONVERSION_FACTOR, ADMIN_EMAILS } from "@/config/constants";
 import {
   LogOut,
   Award,
@@ -88,9 +89,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   // Calculate progress to next level
-  const nextLevelThreshold = 1000;
   const progressPercentage = Math.min(
-    (displayPoints / nextLevelThreshold) * 100,
+    (displayPoints / LEVEL_THRESHOLD) * 100,
     100,
   );
 
@@ -178,12 +178,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             Perfil
           </Button>
           {(() => {
-            const isUserAdmin = user?.email && (
-              user.email === "reciclamt.projeto@gmail.com" ||
-              user.email === "admin@reciclamt.com" ||
-              user.email === "admin@example.com" ||
-              user.email === "leticialanfredi@gmail.com"
-            ) || user?.role === "admin";
+            const isUserAdmin = (user?.email && ADMIN_EMAILS.includes(user.email)) || user?.role === "admin";
             
             console.log("[ReciclaMT][DEBUG] Dashboard - Checking admin button visibility");
             console.log("[ReciclaMT][DEBUG] Dashboard - user:", user);
@@ -255,7 +250,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <div className="flex justify-between text-sm mb-1">
                         <span>Progresso para o próximo nível</span>
                         <span>
-                          {displayPoints}/{nextLevelThreshold}
+                          {displayPoints}/{LEVEL_THRESHOLD}
                         </span>
                       </div>
                       <Progress value={progressPercentage} className="h-2" />
@@ -325,7 +320,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="bg-primary/10 p-4 rounded-lg text-center">
                     <p className="text-3xl font-bold">
-                      {(stats.totalWeight * 0.5).toFixed(1)}kg
+                      {(stats.totalWeight * CO2_CONVERSION_FACTOR).toFixed(1)}kg
                     </p>
                     <p className="text-sm text-muted-foreground">
                       CO₂ economizado

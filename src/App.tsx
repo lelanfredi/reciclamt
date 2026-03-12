@@ -8,6 +8,7 @@ import OProjeto from "./components/OProjeto";
 import { ResetPassword } from "./components/ResetPassword";
 import { useAuth } from "./hooks/useAuth";
 import { Toaster } from "@/components/ui/toaster";
+import { ADMIN_EMAILS } from "./config/constants";
 
 function App() {
   const { user, loading, logout } = useAuth();
@@ -29,12 +30,7 @@ function App() {
     console.log("[ReciclaMT][DEBUG] User email:", user?.email);
     console.log("[ReciclaMT][DEBUG] User role:", user?.role);
     
-    if (
-      user?.email &&
-      (user.email === "reciclamt.projeto@gmail.com" ||
-        user.email === "admin@reciclamt.com" ||
-        user.email === "admin@example.com")
-    ) {
+    if (user?.email && ADMIN_EMAILS.includes(user.email)) {
       console.log("[ReciclaMT][DEBUG] User is admin by email");
       setIsAdmin(true);
     } else if (user?.role === "admin") {
@@ -104,12 +100,7 @@ function App() {
                   console.log("[ReciclaMT][DEBUG] Admin route check - isAdmin:", isAdmin);
                   
                   // Check if user is admin by email or role
-                  const isUserAdmin = user?.email && (
-                    user.email === "reciclamt.projeto@gmail.com" ||
-                    user.email === "admin@reciclamt.com" ||
-                    user.email === "admin@example.com" ||
-                    user.email === "leticialanfredi@gmail.com"
-                  ) || user?.role === "admin";
+                  const isUserAdmin = (user?.email && ADMIN_EMAILS.includes(user.email)) || user?.role === "admin";
                   
                   console.log("[ReciclaMT][DEBUG] isUserAdmin:", isUserAdmin);
                   

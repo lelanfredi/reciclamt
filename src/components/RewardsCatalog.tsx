@@ -40,6 +40,7 @@ interface Reward {
   category: string;
   pointCost: number;
   image: string;
+  available?: string;
 }
 
 interface RewardsCatalogProps {
@@ -79,6 +80,7 @@ const RewardsCatalog: React.FC<RewardsCatalogProps> = ({
           image:
             reward.image_url ||
             "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
+          available: reward.available,
         }))
       : propRewards || [];
 

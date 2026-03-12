@@ -10,7 +10,7 @@ const sampleRewards = [
     category: "Descontos",
     image_url:
       "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
-    available: true,
+    available: "true",
   },
   {
     name: "Ingresso para Cinema",
@@ -19,7 +19,7 @@ const sampleRewards = [
     category: "Entretenimento",
     image_url:
       "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=400&q=80",
-    available: true,
+    available: "true",
   },
   {
     name: "Muda de Árvore Nativa",
@@ -28,7 +28,7 @@ const sampleRewards = [
     category: "Sustentabilidade",
     image_url:
       "https://images.unsplash.com/photo-1636826874099-8f5f3af30d3c?w=400&q=80",
-    available: true,
+    available: "true",
   },
   {
     name: "Curso de Compostagem",
@@ -37,7 +37,7 @@ const sampleRewards = [
     category: "Educação",
     image_url:
       "https://images.unsplash.com/photo-1582560475093-ba66accbc095?w=400&q=80",
-    available: true,
+    available: "true",
   },
   {
     name: "Garrafa Reutilizável",
@@ -46,7 +46,7 @@ const sampleRewards = [
     category: "Produtos",
     image_url:
       "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&q=80",
-    available: true,
+    available: "true",
   },
   {
     name: "Voucher para Restaurante",
@@ -55,7 +55,7 @@ const sampleRewards = [
     category: "Alimentação",
     image_url:
       "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80",
-    available: true,
+    available: "true",
   },
 ];
 

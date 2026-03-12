@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SeedDatabaseButton } from "./SeedDatabaseButton";
+import AdminCampaigns from "./AdminCampaigns";
 
 // Debug log
 console.log("[ReciclaMT][DEBUG] AdminPanel component loaded");
@@ -56,7 +57,7 @@ interface Reward {
   description: string;
   pointsRequired: number;
   category: string;
-  available: boolean;
+  available: string;
   imageUrl: string;
 }
 
@@ -180,7 +181,7 @@ export function AdminPanel() {
       description: reward.description,
       pointsRequired: reward.pointsRequired,
       category: reward.category,
-      available: reward.available === true ? "true" : (reward.available === false ? "false" : "soon"),
+      available: reward.available || "true",
       imageUrl: reward.imageUrl,
     });
     setIsEditRewardOpen(true);
@@ -237,7 +238,7 @@ export function AdminPanel() {
           pointsRequired: data.points_required,
           category: data.category,
           imageUrl: data.image_url,
-          available: typeof data.available === "string" ? data.available : (data.available === true ? "true" : (data.available === false ? "false" : "soon")),
+          available: String(data.available),
         },
       ]);
       setIsAddRewardOpen(false);
@@ -301,7 +302,7 @@ export function AdminPanel() {
               pointsRequired: data.points_required,
               category: data.category,
               imageUrl: data.image_url,
-              available: typeof data.available === "string" ? data.available : (data.available === true ? "true" : (data.available === false ? "false" : "soon")),
+              available: String(data.available),
             }
           : reward
       );
@@ -317,7 +318,7 @@ export function AdminPanel() {
   // Delete reward
   const deleteReward = async (id: string) => {
     // Atualizar status para 'desativado' no Supabase
-    const { error } = await supabase.from("rewards").update({ status: "desativado" }).eq("id", id);
+    const { error } = await supabase.from("rewards").update({ available: "false" }).eq("id", id);
     if (error) {
       alert("Erro ao desativar recompensa: " + error.message);
       return;
@@ -331,7 +332,7 @@ export function AdminPanel() {
     setRewards(
       rewards.map((reward) =>
         reward.id === id
-          ? { ...reward, available: reward.available === true ? "soon" : (reward.available === "soon" ? false : true) }
+          ? { ...reward, available: reward.available === "true" ? "soon" : (reward.available === "soon" ? "false" : "true") }
           : reward,
       ),
     );
@@ -444,10 +445,11 @@ export function AdminPanel() {
         onValueChange={setActiveTab}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-3 mb-8">
-          <TabsTrigger value="rewards">Gerenciar Recompensas</TabsTrigger>
-          <TabsTrigger value="users">Gerenciar Usuários</TabsTrigger>
-          <TabsTrigger value="settings">Configurações do Sistema</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsTrigger value="rewards">Recompensas</TabsTrigger>
+          <TabsTrigger value="campaigns">Campanhas</TabsTrigger>
+          <TabsTrigger value="users">Usuários</TabsTrigger>
+          <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
 
         {/* Rewards Management Tab */}
@@ -632,8 +634,8 @@ export function AdminPanel() {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-xl">{reward.name}</CardTitle>
-                    <Badge variant={reward.available === true ? "default" : (reward.available === "soon" ? "secondary" : "outline")}>
-                      {reward.available === true ? "Disponível" : (reward.available === "soon" ? "Em breve" : "Indisponível")}
+                    <Badge variant={reward.available === "true" ? "default" : (reward.available === "soon" ? "secondary" : "outline")}>
+                      {reward.available === "true" ? "Disponível" : (reward.available === "soon" ? "Em breve" : "Indisponível")}
                     </Badge>
                   </div>
                   <CardDescription className="text-sm text-gray-500">
@@ -828,6 +830,11 @@ export function AdminPanel() {
               <p className="text-gray-500">Nenhuma recompensa encontrada.</p>
             </div>
           )}
+        </TabsContent>
+
+        {/* Campaigns Management Tab */}
+        <TabsContent value="campaigns" className="space-y-4">
+          <AdminCampaigns />
         </TabsContent>
 
         {/* Users Management Tab */}

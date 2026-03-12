@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Tables } from "../types/supabase";
+import { POINTS_PER_KG, DEFAULT_POINTS_PER_KG, MaterialType } from "../config/constants";
 
 type RecyclingActivity = Tables<"recycling_activities">;
 
@@ -43,17 +44,9 @@ export function useRecycling(userId?: string) {
 
     try {
       // Calculate points based on material type and weight
-      const pointsPerKg = {
-        Plástico: 10,
-        Papel: 8,
-        Vidro: 12,
-        Metal: 15,
-        Eletrônicos: 25,
-      };
-
       const points = Math.round(
-        (pointsPerKg[activity.material_type as keyof typeof pointsPerKg] ||
-          10) * activity.weight_kg,
+        (POINTS_PER_KG[activity.material_type as MaterialType] ||
+          DEFAULT_POINTS_PER_KG) * activity.weight_kg,
       );
 
       // Add recycling activity
