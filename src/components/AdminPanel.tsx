@@ -49,7 +49,7 @@ import {
 import { useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import { applyPhoneMask, removePhoneMask } from "@/lib/masks";
+import { applyPhoneMask, removePhoneMask, normalizePhoneForStorage } from "@/lib/masks";
 
 interface Reward {
   id: string;
@@ -405,7 +405,7 @@ export function AdminPanel() {
     // Atualizar no Supabase
     const { error } = await supabase.from("users").update({
       name: userForm.name,
-      phone: removePhoneMask(userForm.phone), // Remove máscara antes de enviar
+      phone: normalizePhoneForStorage(removePhoneMask(userForm.phone)), // Normaliza com código do país
       points: Number(userForm.points),
       role: userForm.role,
     }).eq("id", currentUser.id);

@@ -26,7 +26,7 @@ import { Leaf, Phone, Mail, Check, AlertCircle, Lock } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/useAuth";
-import { applyPhoneMask, removePhoneMask } from "@/lib/masks";
+import { applyPhoneMask, removePhoneMask, normalizePhoneForStorage } from "@/lib/masks";
 import { supabase } from "../lib/supabase";
 
 const loginSchema = z.object({
@@ -122,7 +122,7 @@ const AuthForms = ({
     // Try to register with Supabase
     const { user, error } = await register({
       name: data.name,
-      phone: removePhoneMask(data.phone), // Remove máscara antes de enviar
+      phone: normalizePhoneForStorage(removePhoneMask(data.phone)), // Normaliza com código do país (55) para matching com WhatsApp
       email: data.email,
       password: data.password,
     });
@@ -144,10 +144,10 @@ const AuthForms = ({
       const currentPhone =
         activeTab === "login"
           ? loginForm.getValues().identifier
-          : removePhoneMask(registerForm.getValues().phone);
+          : normalizePhoneForStorage(removePhoneMask(registerForm.getValues().phone));
 
       // Check if it's the test user with specific code validation
-      if (currentPhone === "65999999999") {
+      if (currentPhone === "5565999999999" || currentPhone === "65999999999") {
         if (verificationCode === "123456") {
           setVerificationSuccess(true);
           setVerificationError(false);
@@ -180,7 +180,7 @@ const AuthForms = ({
             console.log("Auto-login: Calling onRegister callback");
             onRegister({
               name: registerForm.getValues().name,
-              phone: removePhoneMask(registerForm.getValues().phone),
+              phone: normalizePhoneForStorage(removePhoneMask(registerForm.getValues().phone)),
               email: registerForm.getValues().email,
               acceptTerms: registerForm.getValues().acceptTerms,
             });

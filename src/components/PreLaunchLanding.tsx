@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Users, Clock, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
-import { applyPhoneMask, removePhoneMask } from "@/lib/masks";
+import { applyPhoneMask, removePhoneMask, normalizePhoneForStorage } from "@/lib/masks";
 
 const PreLaunchLanding = () => {
   const [formData, setFormData] = useState({
@@ -56,7 +56,7 @@ const PreLaunchLanding = () => {
         .insert([
           {
             name: formData.name,
-            phone: removePhoneMask(formData.phone), // Remove máscara antes de enviar
+            phone: normalizePhoneForStorage(removePhoneMask(formData.phone)), // Normaliza com código do país
             neighborhood: formData.neighborhood,
             status: 'active'
           }

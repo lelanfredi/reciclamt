@@ -32,6 +32,40 @@ export function removePhoneMask(value: string): string {
 }
 
 /**
+ * Normaliza telefone para formato padrão de armazenamento
+ * Garante que o telefone seja salvo com código do país (55) + DDD + número
+ * Isso permite matching direto com o formato do WhatsApp (5512996811965)
+ * @param phone - Número de telefone (apenas dígitos)
+ * @returns Telefone normalizado com código do país
+ */
+export function normalizePhoneForStorage(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+
+  // Se já tem 13 dígitos (55 + DDD + 9 dígitos), retorna como está
+  if (digits.length === 13 && digits.startsWith('55')) {
+    return digits;
+  }
+
+  // Se tem 12 dígitos (55 + DDD + 8 dígitos), retorna como está
+  if (digits.length === 12 && digits.startsWith('55')) {
+    return digits;
+  }
+
+  // Se tem 11 dígitos (DDD + 9 dígitos celular), adiciona 55
+  if (digits.length === 11) {
+    return '55' + digits;
+  }
+
+  // Se tem 10 dígitos (DDD + 8 dígitos fixo), adiciona 55
+  if (digits.length === 10) {
+    return '55' + digits;
+  }
+
+  // Caso não se encaixe, retorna como está
+  return digits;
+}
+
+/**
  * Valida se o telefone tem formato válido
  * @param phone - Número de telefone
  * @returns true se válido

@@ -35,6 +35,43 @@ import {
 } from "@/hooks/useCampaigns";
 import { useAuth } from "@/hooks/useAuth";
 
+/**
+ * Limpa a descrição que vem do bot (VisionAgent do Botpress)
+ * Extrai apenas a parte útil: o que o objeto é, removendo URLs, headers e metadados
+ */
+function cleanBotDescription(raw: string): string {
+  if (!raw) return "";
+
+  // Remove prefixo "(Image) URL..." até o primeiro "\n" ou "The user replied"
+  let text = raw.replace(/^\(Image\)\s*https?:\/\/[^\s]+\s*/i, "");
+  text = text.replace(/^The user replied with an image\.\s*Here'?s the image analysis:\s*/i, "");
+
+  // Remove headers markdown (### Context and Details:, etc)
+  text = text.replace(/###\s*[^\n]+\n/g, "");
+
+  // Remove marcadores de lista markdown (- **Object**: ...)
+  // Extrai o conteúdo de cada item
+  const items: string[] = [];
+  const itemRegex = /-\s*\*\*(\w+)\*\*:\s*(.+)/g;
+  let match;
+  while ((match = itemRegex.exec(text)) !== null) {
+    items.push(match[2].trim());
+  }
+
+  if (items.length > 0) {
+    return items[0]; // Retorna apenas o primeiro item (Object)
+  }
+
+  // Se não achou items, tenta pegar a primeira frase descritiva
+  const firstSentence = text.replace(/\n+/g, " ").trim().split(/\.\s/)[0];
+  if (firstSentence && firstSentence.length > 10) {
+    return firstSentence + ".";
+  }
+
+  // Fallback: retorna texto limpo truncado
+  return text.replace(/\n+/g, " ").trim().slice(0, 200);
+}
+
 const AdminCampaigns: React.FC = () => {
   const { user } = useAuth();
   const {
@@ -331,7 +368,7 @@ const AdminCampaigns: React.FC = () => {
                 <CardContent className="pb-2">
                   {sub.description && (
                     <p className="text-sm text-gray-600 mb-2">
-                      {sub.description}
+                      {cleanBotDescription(sub.description)}
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
@@ -408,7 +445,7 @@ const AdminCampaigns: React.FC = () => {
                 {selectedSubmission.description && (
                   <p className="text-sm">
                     <span className="font-medium">Descrição:</span>{" "}
-                    {selectedSubmission.description}
+                    {cleanBotDescription(selectedSubmission.description)}
                   </p>
                 )}
               </div>
