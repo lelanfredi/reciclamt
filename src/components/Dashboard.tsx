@@ -18,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import RewardsCatalog from "./RewardsCatalog";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecycling } from "@/hooks/useRecycling";
+import { LEVEL_THRESHOLD, CO2_CONVERSION_FACTOR, ADMIN_EMAILS } from "@/config/constants";
 import {
   LogOut,
   Award,
@@ -55,7 +56,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   userBadges = [],
   recyclingHistory,
   onLogout = () => console.log("Logout clicked"),
-  isAdmin = false,
 }) => {
   const [activeTab, setActiveTab] = useState("progress");
   const navigate = useNavigate();
@@ -83,14 +83,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   const stats = getRecyclingStats();
 
   const handleLogout = () => {
+    console.log("[ReciclaMT][DEBUG] Logout button clicked");
     logout();
     onLogout();
   };
 
   // Calculate progress to next level
-  const nextLevelThreshold = 1000;
   const progressPercentage = Math.min(
-    (displayPoints / nextLevelThreshold) * 100,
+    (displayPoints / LEVEL_THRESHOLD) * 100,
     100,
   );
 
@@ -108,7 +108,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <div className="w-64 border-r bg-card p-4 flex flex-col">
+      <div className="w-64 border-r bg-card p-4 flex flex-col h-full">
         <div className="flex items-center justify-center mb-8 mt-4">
           <h2 className="text-2xl font-bold text-primary">ReciclaMT</h2>
         </div>
@@ -118,8 +118,17 @@ const Dashboard: React.FC<DashboardProps> = ({
             <AvatarSelector
               currentAvatar={user?.avatar_seed || "felix"}
               onAvatarSelect={async (avatar) => {
+                console.log("[ReciclaMT][DEBUG] Dashboard - Avatar selected:", avatar.seed);
+                console.log("[ReciclaMT][DEBUG] Dashboard - Current user avatar_seed:", user?.avatar_seed);
                 if (updateUserAvatar) {
-                  await updateUserAvatar(avatar.seed);
+                  const result = await updateUserAvatar(avatar.seed);
+                  if (result.error) {
+                    console.error("Erro ao atualizar avatar:", result.error);
+                    alert("Erro ao atualizar avatar. Tente novamente.");
+                  } else {
+                    console.log("Avatar atualizado com sucesso!");
+                    console.log("[ReciclaMT][DEBUG] Dashboard - New user avatar_seed:", result.user?.avatar_seed);
+                  }
                 }
               }}
               size="lg"
@@ -168,12 +177,27 @@ const Dashboard: React.FC<DashboardProps> = ({
             <User className="mr-2 h-5 w-5" />
             Perfil
           </Button>
-          {isAdmin && (
+          {(() => {
+            const isUserAdmin = (user?.email && ADMIN_EMAILS.includes(user.email)) || user?.role === "admin";
+            
+            console.log("[ReciclaMT][DEBUG] Dashboard - Checking admin button visibility");
+            console.log("[ReciclaMT][DEBUG] Dashboard - user:", user);
+            console.log("[ReciclaMT][DEBUG] Dashboard - user.role:", user?.role);
+            console.log("[ReciclaMT][DEBUG] Dashboard - user.email:", user?.email);
+            console.log("[ReciclaMT][DEBUG] Dashboard - isUserAdmin:", isUserAdmin);
+            
+            return isUserAdmin;
+          })() && (
             <Button
               variant="ghost"
               className="w-full justify-start text-orange-600 hover:text-orange-700 hover:bg-orange-50"
               onClick={() => {
+                console.log("[ReciclaMT][DEBUG] Admin button clicked");
+                console.log("[ReciclaMT][DEBUG] Current user:", user);
+                console.log("[ReciclaMT][DEBUG] User role:", user?.role);
+                console.log("[ReciclaMT][DEBUG] Navigating to /admin");
                 navigate("/admin");
+                console.log("[ReciclaMT][DEBUG] Navigate called");
               }}
             >
               <Shield className="mr-2 h-5 w-5" />
@@ -182,7 +206,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
         </nav>
 
-        <Button variant="outline" className="mt-auto" onClick={handleLogout}>
+        <Button 
+          variant="outline" 
+          className="mt-auto w-full justify-start cursor-pointer hover:bg-red-50 hover:text-red-600" 
+          onClick={handleLogout}
+        >
           <LogOut className="mr-2 h-5 w-5" />
           Sair
         </Button>
@@ -222,7 +250,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <div className="flex justify-between text-sm mb-1">
                         <span>Progresso para o próximo nível</span>
                         <span>
-                          {displayPoints}/{nextLevelThreshold}
+                          {displayPoints}/{LEVEL_THRESHOLD}
                         </span>
                       </div>
                       <Progress value={progressPercentage} className="h-2" />
@@ -292,7 +320,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="bg-primary/10 p-4 rounded-lg text-center">
                     <p className="text-3xl font-bold">
-                      {(stats.totalWeight * 0.5).toFixed(1)}kg
+                      {(stats.totalWeight * CO2_CONVERSION_FACTOR).toFixed(1)}kg
                     </p>
                     <p className="text-sm text-muted-foreground">
                       CO₂ economizado
@@ -371,8 +399,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <AvatarSelector
                     currentAvatar={user?.avatar_seed || "felix"}
                     onAvatarSelect={async (avatar) => {
+                      console.log("[ReciclaMT][DEBUG] Dashboard Profile - Avatar selected:", avatar.seed);
+                      console.log("[ReciclaMT][DEBUG] Dashboard Profile - Current user avatar_seed:", user?.avatar_seed);
                       if (updateUserAvatar) {
-                        await updateUserAvatar(avatar.seed);
+                        const result = await updateUserAvatar(avatar.seed);
+                        if (result.error) {
+                          console.error("Erro ao atualizar avatar:", result.error);
+                          alert("Erro ao atualizar avatar. Tente novamente.");
+                        } else {
+                          console.log("Avatar atualizado com sucesso!");
+                          console.log("[ReciclaMT][DEBUG] Dashboard Profile - New user avatar_seed:", result.user?.avatar_seed);
+                        }
                       }
                     }}
                     size="lg"

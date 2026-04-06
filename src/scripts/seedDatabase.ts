@@ -10,7 +10,7 @@ const sampleRewards = [
     category: "Descontos",
     image_url:
       "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
-    available: true,
+    available: "true",
   },
   {
     name: "Ingresso para Cinema",
@@ -19,7 +19,7 @@ const sampleRewards = [
     category: "Entretenimento",
     image_url:
       "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=400&q=80",
-    available: true,
+    available: "true",
   },
   {
     name: "Muda de Árvore Nativa",
@@ -28,7 +28,7 @@ const sampleRewards = [
     category: "Sustentabilidade",
     image_url:
       "https://images.unsplash.com/photo-1636826874099-8f5f3af30d3c?w=400&q=80",
-    available: true,
+    available: "true",
   },
   {
     name: "Curso de Compostagem",
@@ -37,7 +37,7 @@ const sampleRewards = [
     category: "Educação",
     image_url:
       "https://images.unsplash.com/photo-1582560475093-ba66accbc095?w=400&q=80",
-    available: true,
+    available: "true",
   },
   {
     name: "Garrafa Reutilizável",
@@ -46,7 +46,7 @@ const sampleRewards = [
     category: "Produtos",
     image_url:
       "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&q=80",
-    available: true,
+    available: "true",
   },
   {
     name: "Voucher para Restaurante",
@@ -55,18 +55,18 @@ const sampleRewards = [
     category: "Alimentação",
     image_url:
       "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80",
-    available: true,
+    available: "true",
   },
 ];
 
 // Sample ecopoints data
 const sampleEcopoints = [
   {
-    name: "Ecoponto Piloto - Assembleia Legislativa de Mato Grosso",
+    name: "Ecoponto Piloto - Câmara Municipal de Cuiabá",
     address:
-      "Av. André Maggi, 6 - Centro Político Administrativo, Cuiabá - MT, 78049-901",
-    latitude: -15.5692,
-    longitude: -56.0812,
+      "Praça Barão de Melgaço, s/n - Centro, Cuiabá - MT, 78020-400",
+    latitude: -15.6014,
+    longitude: -56.0979,
     accepted_materials: ["Plástico", "Papel", "Vidro", "Metal"],
     operating_hours: "Segunda a Sexta: 8h às 17h",
     contact_info: "Telefone: (65) 3313-6000",
@@ -91,6 +91,34 @@ const sampleEcopoints = [
     operating_hours: "Segunda a Sábado: 10h às 22h, Domingo: 14h às 20h",
     contact_info: "Telefone: (65) 3025-2000",
     active: true,
+  },
+];
+
+// Sample users data
+const sampleUsers = [
+  {
+    name: "Admin ReciclaMT",
+    email: "reciclamt.projeto@gmail.com",
+    phone: "65999999999",
+    points: 0,
+    role: "admin",
+    created_at: new Date().toISOString(),
+  },
+  {
+    name: "Admin Teste",
+    email: "admin@example.com",
+    phone: "65999999998",
+    points: 0,
+    role: "admin",
+    created_at: new Date().toISOString(),
+  },
+  {
+    name: "Usuário Teste",
+    email: "teste@reciclamt.com",
+    phone: "65999999997",
+    points: 100,
+    role: "user",
+    created_at: new Date().toISOString(),
   },
 ];
 
@@ -125,6 +153,21 @@ export async function seedDatabase() {
     } else {
       console.log(
         `✅ ${ecopointsData?.length} ecopontos inseridos com sucesso`,
+      );
+    }
+
+    // Insert users
+    console.log("👥 Inserindo usuários de teste...");
+    const { data: usersData, error: usersError } = await supabase
+      .from("users")
+      .insert(sampleUsers)
+      .select();
+
+    if (usersError) {
+      console.error("Erro ao inserir usuários:", usersError);
+    } else {
+      console.log(
+        `✅ ${usersData?.length} usuários inseridos com sucesso`,
       );
     }
 

@@ -5,40 +5,39 @@ import Dashboard from "./components/Dashboard";
 import AdminPanel from "./components/AdminPanel";
 import QuemSomos from "./components/QuemSomos";
 import OProjeto from "./components/OProjeto";
+import { ResetPassword } from "./components/ResetPassword";
 import { useAuth } from "./hooks/useAuth";
+import { Toaster } from "@/components/ui/toaster";
+import { ADMIN_EMAILS } from "./config/constants";
 
 function App() {
   const { user, loading, logout } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Import tempo routes conditionally
-  let tempoRoutes = null;
-  if (import.meta.env.VITE_TEMPO) {
-    try {
-      // Use import() for dynamic imports in Vite
-      import("tempo-routes")
-        .then((module) => {
-          const routes = module.default;
-          tempoRoutes = useRoutes(routes);
-        })
-        .catch((error) => {
-          console.warn("Tempo routes not available:", error);
-        });
-    } catch (error) {
-      console.warn("Tempo routes not available:", error);
-    }
-  }
+  // Debug logs
+  console.log("[ReciclaMT][DEBUG] App render - user:", user, "loading:", loading);
+  console.log("[ReciclaMT][DEBUG] Will render:", user ? "Dashboard" : "Home");
+
+  // Force re-render when user changes
+  useEffect(() => {
+    console.log("[ReciclaMT][DEBUG] App useEffect - user changed:", user);
+  }, [user]);
+
 
   useEffect(() => {
     // Check if user is admin based on email
-    if (
-      user?.email &&
-      (user.email === "reciclamt.projeto@gmail.com" ||
-        user.email === "admin@reciclamt.com" ||
-        user.email === "admin@example.com")
-    ) {
+    console.log("[ReciclaMT][DEBUG] Checking admin status for user:", user);
+    console.log("[ReciclaMT][DEBUG] User email:", user?.email);
+    console.log("[ReciclaMT][DEBUG] User role:", user?.role);
+    
+    if (user?.email && ADMIN_EMAILS.includes(user.email)) {
+      console.log("[ReciclaMT][DEBUG] User is admin by email");
+      setIsAdmin(true);
+    } else if (user?.role === "admin") {
+      console.log("[ReciclaMT][DEBUG] User is admin by role");
       setIsAdmin(true);
     } else {
+      console.log("[ReciclaMT][DEBUG] User is not admin");
       setIsAdmin(false);
     }
   }, [user]);
@@ -68,6 +67,64 @@ function App() {
     );
   }
 
+  // Render Dashboard or Home based on authentication
+  if (user) {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center h-screen">
+            Carregando...
+          </div>
+        }
+      >
+        <div className="min-h-screen bg-syntiro-50 w-full">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Dashboard
+                  userName={user.name}
+                  userEmail={user.email || undefined}
+                  userPoints={user.points}
+                  onLogout={handleLogout}
+                  isAdmin={isAdmin}
+                />
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                (() => {
+                  console.log("[ReciclaMT][DEBUG] Admin route check - user:", user);
+                  console.log("[ReciclaMT][DEBUG] Admin route check - user.role:", user?.role);
+                  console.log("[ReciclaMT][DEBUG] Admin route check - isAdmin:", isAdmin);
+                  
+                  // Check if user is admin by email or role
+                  const isUserAdmin = (user?.email && ADMIN_EMAILS.includes(user.email)) || user?.role === "admin";
+                  
+                  console.log("[ReciclaMT][DEBUG] isUserAdmin:", isUserAdmin);
+                  
+                  if (isUserAdmin) {
+                    console.log("[ReciclaMT][DEBUG] Rendering AdminPanel");
+                    return <AdminPanel />;
+                  } else {
+                    console.log("[ReciclaMT][DEBUG] Redirecting to home - not admin");
+                    return <Navigate to="/" replace />;
+                  }
+                })()
+              }
+            />
+            <Route path="/quemsomos" element={<QuemSomos />} />
+            <Route path="/oprojeto" element={<OProjeto />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          </Routes>
+        </div>
+        <Toaster />
+      </Suspense>
+    );
+  }
+
+  // Render Home for unauthenticated users
   return (
     <Suspense
       fallback={
@@ -77,41 +134,23 @@ function App() {
       }
     >
       <div className="min-h-screen bg-syntiro-50 w-full">
-        {tempoRoutes}
         <Routes>
-          {import.meta.env.VITE_TEMPO && (
-            <Route path="/tempobook/*" element={<div />} />
-          )}
           <Route
             path="/"
             element={
-              user ? (
-                <Dashboard
-                  userName={user.name}
-                  userEmail={user.email || undefined}
-                  userPoints={user.points}
-                  onLogout={handleLogout}
-                  isAdmin={isAdmin}
-                />
-              ) : (
-                <Home
-                  isAuthenticated={!!user}
-                  onLogin={handleLogin}
-                  onRegister={handleRegister}
-                />
-              )
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              user && user.role === "admin" ? <AdminPanel /> : <Navigate to="/" replace />
+              <Home
+                isAuthenticated={!!user}
+                onLogin={handleLogin}
+                onRegister={handleRegister}
+              />
             }
           />
           <Route path="/quemsomos" element={<QuemSomos />} />
           <Route path="/oprojeto" element={<OProjeto />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </div>
+      <Toaster />
     </Suspense>
   );
 }

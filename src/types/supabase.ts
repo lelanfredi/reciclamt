@@ -17,6 +17,7 @@ export type Database = {
           email: string | null;
           points: number;
           avatar_seed: string | null;
+          role?: string;
           created_at: string;
           updated_at: string;
         };
@@ -27,6 +28,7 @@ export type Database = {
           email?: string | null;
           points?: number;
           avatar_seed?: string | null;
+          role?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -37,6 +39,7 @@ export type Database = {
           email?: string | null;
           points?: number;
           avatar_seed?: string | null;
+          role?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -78,7 +81,7 @@ export type Database = {
           points_required: number;
           category: string;
           image_url: string | null;
-          available: boolean;
+          available: string;
           created_at: string;
           updated_at: string;
         };
@@ -89,7 +92,7 @@ export type Database = {
           points_required: number;
           category: string;
           image_url?: string | null;
-          available?: boolean;
+          available?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -100,7 +103,7 @@ export type Database = {
           points_required?: number;
           category?: string;
           image_url?: string | null;
-          available?: boolean;
+          available?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -175,12 +178,132 @@ export type Database = {
           updated_at?: string;
         };
       };
+      pre_cadastro: {
+        Row: {
+          id: number;
+          name: string;
+          phone: string;
+          neighborhood: string;
+          created_at: string;
+          status: string;
+        };
+        Insert: {
+          id?: number;
+          name: string;
+          phone: string;
+          neighborhood: string;
+          created_at?: string;
+          status?: string;
+        };
+        Update: {
+          id?: number;
+          name?: string;
+          phone?: string;
+          neighborhood?: string;
+          created_at?: string;
+          status?: string;
+        };
+      };
+      campaigns: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          slug: string;
+          points_per_kg: number;
+          status: string;
+          materials_accepted: string[];
+          start_date: string;
+          end_date: string | null;
+          image_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          slug: string;
+          points_per_kg?: number;
+          status?: string;
+          materials_accepted?: string[];
+          start_date?: string;
+          end_date?: string | null;
+          image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          slug?: string;
+          points_per_kg?: number;
+          status?: string;
+          materials_accepted?: string[];
+          start_date?: string;
+          end_date?: string | null;
+          image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      campaign_submissions: {
+        Row: {
+          id: string;
+          campaign_id: string;
+          user_id: string;
+          photo_url: string;
+          description: string | null;
+          estimated_weight_kg: number | null;
+          status: string;
+          points_awarded: number;
+          rejection_reason: string | null;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          campaign_id: string;
+          user_id: string;
+          photo_url: string;
+          description?: string | null;
+          estimated_weight_kg?: number | null;
+          status?: string;
+          points_awarded?: number;
+          rejection_reason?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          campaign_id?: string;
+          user_id?: string;
+          photo_url?: string;
+          description?: string | null;
+          estimated_weight_kg?: number | null;
+          status?: string;
+          points_awarded?: number;
+          rejection_reason?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      increment_user_points: {
+        Args: {
+          target_user_id: string;
+          points_to_add: number;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       [_ in never]: never;

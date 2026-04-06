@@ -26,6 +26,7 @@ import { Leaf, Phone, Mail, Check, AlertCircle, Lock } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/useAuth";
+import { applyPhoneMask, removePhoneMask, normalizePhoneForStorage } from "@/lib/masks";
 import { supabase } from "../lib/supabase";
 
 const loginSchema = z.object({
@@ -37,8 +38,11 @@ const registerSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   phone: z
     .string()
-    .min(10, "Número de WhatsApp deve ter pelo menos 10 dígitos")
-    .regex(/^\d+$/, "Apenas números são permitidos"),
+    .min(1, "WhatsApp é obrigatório")
+    .refine((value) => {
+      const numbers = removePhoneMask(value);
+      return numbers.length >= 10 && numbers.length <= 11;
+    }, "WhatsApp deve ter 10 ou 11 dígitos"),
   email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   acceptTerms: z
@@ -118,7 +122,7 @@ const AuthForms = ({
     // Try to register with Supabase
     const { user, error } = await register({
       name: data.name,
-      phone: data.phone,
+      phone: normalizePhoneForStorage(removePhoneMask(data.phone)), // Normaliza com código do país (55) para matching com WhatsApp
       email: data.email,
       password: data.password,
     });
@@ -139,11 +143,11 @@ const AuthForms = ({
     setTimeout(() => {
       const currentPhone =
         activeTab === "login"
-          ? loginForm.getValues().phone
-          : registerForm.getValues().phone;
+          ? loginForm.getValues().identifier
+          : normalizePhoneForStorage(removePhoneMask(registerForm.getValues().phone));
 
       // Check if it's the test user with specific code validation
-      if (currentPhone === "12996811965") {
+      if (currentPhone === "5565999999999" || currentPhone === "65999999999") {
         if (verificationCode === "123456") {
           setVerificationSuccess(true);
           setVerificationError(false);
@@ -162,21 +166,21 @@ const AuthForms = ({
       // Auto-login after successful verification
       if (
         verificationSuccess ||
-        (currentPhone === "12996811965" && verificationCode === "123456") ||
-        currentPhone !== "12996811965"
+        (currentPhone === "65999999999" && verificationCode === "123456") ||
+        currentPhone !== "65999999999"
       ) {
         setTimeout(() => {
           if (activeTab === "login" && onLogin) {
             console.log("Auto-login: Calling onLogin callback");
             onLogin({
-              phone: loginForm.getValues().phone,
-              email: loginForm.getValues().email,
+              identifier: loginForm.getValues().identifier,
+              password: loginForm.getValues().password,
             });
           } else if (activeTab === "register" && onRegister) {
             console.log("Auto-login: Calling onRegister callback");
             onRegister({
               name: registerForm.getValues().name,
-              phone: registerForm.getValues().phone,
+              phone: normalizePhoneForStorage(removePhoneMask(registerForm.getValues().phone)),
               email: registerForm.getValues().email,
               acceptTerms: registerForm.getValues().acceptTerms,
             });
@@ -394,9 +398,13 @@ const AuthForms = ({
                         <div className="relative">
                           <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-syntiro-500 h-4 w-4" />
                           <Input
-                            placeholder="12996811965"
+                            placeholder="(65) 99999-9999"
                             className="pl-10 border-syntiro-200 focus:border-syntiro-500 focus:ring-syntiro-500 rounded-xl"
-                            {...field}
+                            value={applyPhoneMask(field.value)}
+                            onChange={(e) => {
+                              const maskedValue = applyPhoneMask(e.target.value);
+                              field.onChange(maskedValue);
+                            }}
                           />
                         </div>
                       </FormControl>

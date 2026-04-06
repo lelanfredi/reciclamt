@@ -16,6 +16,7 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface HomeProps {
   isAuthenticated?: boolean;
@@ -30,7 +31,6 @@ const Home = ({
   onLogin,
   onRegister,
 }: HomeProps) => {
-  const [userAuthenticated, setUserAuthenticated] = useState(isAuthenticated);
   const [activeSection, setActiveSection] = useState("hero");
 
   const handleScroll = (sectionId: string) => {
@@ -41,7 +41,19 @@ const Home = ({
     }
   };
 
-  if (userAuthenticated) {
+  // Definição dos parceiros para exibir os logos no final da página
+  const parceiros = [
+    {
+      alt: "Fapemat",
+      src: "/images/fapemat.png"
+    },
+    {
+      alt: "Finep",
+      src: "/images/finep.png"
+    }
+  ];
+
+  if (isAuthenticated) {
     return (
       <motion.div
         className="w-full max-w-7xl"
@@ -181,9 +193,9 @@ const Home = ({
       {/* Hero Section */}
       <section id="hero" className="pt-28 pb-16 md:pt-32 md:pb-24">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             <motion.div
-              className="flex-1"
+              className="flex-1 md:w-5/12 lg:w-4/12"
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
@@ -195,7 +207,7 @@ const Home = ({
                     E faz toda a diferença.
                   </span>
                 </h2>
-                <p className="text-gray-600 text-lg max-w-lg">
+                <p className="text-gray-600 text-lg max-w-md">
                   Cada resíduo tem destino certo e seu gesto gera impacto
                   positivo. Juntos, conectamos tecnologia, sustentabilidade e
                   bem-estar social.{" "}
@@ -219,15 +231,15 @@ const Home = ({
             </motion.div>
 
             <motion.div
-              className="w-full md:w-5/12 lg:w-5/12"
+              className="w-full md:w-5/12 lg:w-6/12"
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <img
-                src="/images/container-image.png"
+                src="/images/containerv1.jpeg"
                 alt="Containers de reciclagem ReciclaMT"
-                className="w-full h-auto rounded-2xl shadow-syntiro-lg"
+                className="w-full max-w-4xl h-auto mx-auto md:max-w-5xl lg:max-w-6xl"
               />
             </motion.div>
           </div>
@@ -433,6 +445,29 @@ const Home = ({
                   Vidro
                 </span>
               </div>
+              <div className="flex flex-col items-center">
+                <div className="h-16 w-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-3">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="4" y="7" width="16" height="11" rx="2" />
+                    <rect x="9" y="3" width="6" height="4" rx="1" />
+                    <path d="M9 16h6" />
+                    <path d="M9 13h6" />
+                  </svg>
+                </div>
+                <span className="text-lg font-semibold text-gray-900">
+                  Eletrônicos
+                </span>
+              </div>
             </div>
           </div>
 
@@ -504,7 +539,7 @@ const Home = ({
                 className="mt-6 bg-white text-syntiro-600 hover:bg-gray-100 font-semibold px-8 py-3 rounded-xl"
                 onClick={() =>
                   window.open(
-                    "https://drive.google.com/file/d/178mw3jgLN9C-857Bh7F-MGyGScBM0Irx/view?usp=sharing",
+                    "https://drive.google.com/file/d/1E5o5CNavofV-_IyRVs3_133h2FwoNWPk",
                     "_blank",
                   )
                 }
@@ -531,6 +566,137 @@ const Home = ({
           </div>
         </div>
       </section>
+
+      {/* Campanha Lixo Eletrônico */}
+      <section id="campanha-ewaste" className="py-16 md:py-24 bg-white">
+        <div className="container mx-auto px-4">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
+            <span className="inline-block bg-purple-100 text-purple-700 text-sm font-semibold px-4 py-1 rounded-full mb-4">
+              Nova Campanha
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Campanha Lixo Eletrônico
+            </h2>
+            <p className="text-gray-600 text-lg max-w-3xl mx-auto">
+              Celulares antigos, carregadores, pilhas, baterias, cabos...
+              Agora você pode descartar seus eletrônicos de forma correta e ainda ganhar pontos!
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
+            <motion.div
+              className="bg-white p-8 rounded-2xl shadow-syntiro border-t-4 border-purple-500 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">📸</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                1. Fotografe o material
+              </h3>
+              <p className="text-gray-600">
+                Tire uma foto do eletrônico que deseja descartar e envie pelo
+                nosso chatbot no WhatsApp.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="bg-white p-8 rounded-2xl shadow-syntiro border-t-4 border-purple-500 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">✅</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                2. Validação rápida
+              </h3>
+              <p className="text-gray-600">
+                Nossa equipe analisa a foto e valida o material.
+                Você recebe a confirmação direto no WhatsApp.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="bg-white p-8 rounded-2xl shadow-syntiro border-t-4 border-purple-500 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🏆</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                3. Ganhe pontos extras
+              </h3>
+              <p className="text-gray-600">
+                Eletrônicos valem 25 pontos por kg — a maior pontuação
+                entre todos os materiais!
+              </p>
+            </motion.div>
+          </div>
+
+          <motion.div
+            className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-2xl p-8 md:p-12 text-white text-center max-w-4xl mx-auto"
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
+            <h3 className="text-2xl md:text-3xl font-bold mb-4">
+              Materiais aceitos na campanha
+            </h3>
+            <div className="flex flex-wrap justify-center gap-3 mb-6">
+              {[
+                "Celulares",
+                "Tablets",
+                "Notebooks",
+                "Carregadores",
+                "Cabos",
+                "Pilhas",
+                "Baterias",
+                "Fones de ouvido",
+                "Monitores",
+              ].map((item) => (
+                <span
+                  key={item}
+                  className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+            <p className="text-purple-100 mb-6">
+              Envie uma foto pelo WhatsApp e comece a acumular pontos agora!
+            </p>
+            <Button
+              className="bg-white text-purple-700 hover:bg-purple-50 font-semibold px-8 py-3 rounded-xl text-lg"
+              onClick={() =>
+                window.open(
+                  "https://wa.me/556584424273?text=Olá! Quero participar da campanha de lixo eletrônico!",
+                  "_blank",
+                )
+              }
+            >
+              <Phone className="mr-2 h-5 w-5" />
+              Participar pelo WhatsApp
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Benefits Section */}
       <section id="benefits" className="py-16 md:py-24 bg-syntiro-50">
         <div className="container mx-auto px-4">
@@ -694,13 +860,9 @@ const Home = ({
                 <div className="text-6xl mb-4">💬</div>
               </div>
               <blockquote className="text-gray-700 text-lg leading-relaxed italic space-y-4">
+               
                 <p className="mb-4">
-                  &quot;Sempre me incomodou ver tanto material reciclável indo
-                  pro lixo em Cuiabá. A cidade é quente, os ecopontos são
-                  distantes, e reciclar acaba sendo difícil pra muita gente.
-                </p>
-                <p className="mb-4">
-                  O ReciclaMT nasceu da vontade de facilitar isso. Criamos uma
+                  O ReciclaMT nasceu da vontade de facilitar a coleta seletiva. Criamos uma
                   forma simples de reciclar e ainda ser recompensado por isso —
                   sem precisar instalar nada, só usando o WhatsApp.
                 </p>
@@ -716,8 +878,8 @@ const Home = ({
                 </footer>
               </blockquote>
               <div className="text-center mt-8">
-                <a
-                  href="/quemsomos"
+                <Link
+                  to="/quemsomos"
                   className="inline-flex items-center text-syntiro-600 hover:text-syntiro-700 font-medium text-lg transition-colors"
                 >
                   Conheça mais sobre nossa história
@@ -736,15 +898,15 @@ const Home = ({
                     <path d="M5 12h14" />
                     <path d="m12 5 7 7-7 7" />
                   </svg>
-                </a>
+                </Link>
               </div>
             </div>
           </div>
 
           <div className="mb-8">
             <div className="text-center">
-              <a
-                href="/oprojeto"
+              <Link
+                to="/oprojeto"
                 className="inline-flex items-center text-syntiro-600 hover:text-syntiro-700 font-medium text-lg transition-colors"
               >
                 Conheça mais sobre o projeto e os ODS
@@ -763,7 +925,7 @@ const Home = ({
                   <path d="M5 12h14" />
                   <path d="m12 5 7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -860,12 +1022,10 @@ const Home = ({
                 <AuthForms
                   onLogin={(data) => {
                     console.log("Login callback triggered with data:", data);
-                    setUserAuthenticated(true);
                     if (onLogin) onLogin(data);
                   }}
                   onRegister={(data) => {
                     console.log("Register callback triggered with data:", data);
-                    setUserAuthenticated(true);
                     if (onRegister) onRegister(data);
                   }}
                   defaultTab="register"
@@ -905,10 +1065,10 @@ const Home = ({
                 Email
               </h3>
               <a
-                href="mailto:contato@reciclamt.com.br"
+                href="mailto:reciclamt.projeto@gmail.com"
                 className="text-syntiro-600 hover:text-syntiro-700 font-medium text-lg"
               >
-                contato@reciclamt.com.br
+                reciclamt.projeto@gmail.com
               </a>
             </motion.div>
 
@@ -934,6 +1094,24 @@ const Home = ({
                 +55 65 98442-4273
               </a>
             </motion.div>
+          </div>
+        </div>
+      </section>
+       {/* Seção de parceiros/apoio - acima do footer de navegação */}
+      <section className="w-full bg-white py-6 border-t mt-12">
+        <div className="max-w-4xl mx-auto flex flex-col items-center">
+          <h3 className="text-sm font-semibold text-gray-600 mb-3">Apoio:</h3>
+          <div className="flex flex-wrap justify-center items-center gap-6">
+            {parceiros.map((p) => (
+              <img
+                key={p.alt}
+                src={p.src}
+                alt={p.alt}
+                className="h-20 md:h-24 object-contain"
+                style={{ maxWidth: 324 }}
+                loading="lazy"
+              />
+            ))}
           </div>
         </div>
       </section>
@@ -974,9 +1152,9 @@ const Home = ({
               >
                 Quem Somos
               </button>
-              <a href="/oprojeto" className="text-gray-300 hover:text-white">
+              <Link to="/oprojeto" className="text-gray-300 hover:text-white">
                 O Projeto
-              </a>
+              </Link>
               <button
                 onClick={() => handleScroll("ecopoints")}
                 className="text-gray-300 hover:text-white"
@@ -1005,7 +1183,7 @@ const Home = ({
               </p>
               <div className="flex flex-wrap gap-4">
                 <a
-                  href="https://drive.google.com/file/d/178mw3jgLN9C-857Bh7F-MGyGScBM0Irx/view?usp=sharing"
+                  href="https://drive.google.com/file/d/1E5o5CNavofV-_IyRVs3_133h2FwoNWPk"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-white flex items-center gap-1"
@@ -1048,6 +1226,7 @@ const Home = ({
           </div>
         </div>
       </footer>
+     
     </div>
   );
 };

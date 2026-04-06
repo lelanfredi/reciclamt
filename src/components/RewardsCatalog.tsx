@@ -40,6 +40,7 @@ interface Reward {
   category: string;
   pointCost: number;
   image: string;
+  available?: string;
 }
 
 interface RewardsCatalogProps {
@@ -79,6 +80,7 @@ const RewardsCatalog: React.FC<RewardsCatalogProps> = ({
           image:
             reward.image_url ||
             "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
+          available: reward.available,
         }))
       : propRewards || [];
 
@@ -210,6 +212,9 @@ const RewardsCatalog: React.FC<RewardsCatalogProps> = ({
                     >
                       {reward.category}
                     </Badge>
+                    {reward.available === "soon" && (
+                      <span className="inline-block bg-yellow-200 text-yellow-800 text-xs font-semibold px-2 py-1 rounded ml-2 align-middle">Em breve</span>
+                    )}
                   </div>
                   <CardDescription className="line-clamp-2">
                     {reward.description}

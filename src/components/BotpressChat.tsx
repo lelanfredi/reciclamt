@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { env } from "@/config/environment";
 
 interface BotpressChatProps {
   botId?: string;
@@ -9,10 +10,10 @@ interface BotpressChatProps {
 }
 
 const BotpressChat: React.FC<BotpressChatProps> = ({
-  botId = "5dL7csup",
+  botId = env.botpressBotId || "5dL7csup",
   hostUrl = "https://cdn.botpress.cloud/webchat/v2",
   messagingUrl = "https://messaging.botpress.cloud",
-  clientId = "5dL7csup",
+  clientId = env.botpressClientId || "5dL7csup",
   themeColor = "#3d9d6c",
 }) => {
   useEffect(() => {

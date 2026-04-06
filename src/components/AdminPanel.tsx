@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SeedDatabaseButton } from "./SeedDatabaseButton";
+import AdminCampaigns from "./AdminCampaigns";
+
+// Debug log
+console.log("[ReciclaMT][DEBUG] AdminPanel component loaded");
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,6 +48,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
+import { applyPhoneMask, removePhoneMask, normalizePhoneForStorage } from "@/lib/masks";
 
 interface Reward {
   id: string;
@@ -50,7 +57,7 @@ interface Reward {
   description: string;
   pointsRequired: number;
   category: string;
-  available: boolean;
+  available: string;
   imageUrl: string;
 }
 
@@ -68,13 +75,19 @@ const initialRewards: Reward[] = [];
 const initialUsers: User[] = [];
 
 export function AdminPanel() {
+  console.log("[ReciclaMT][DEBUG] AdminPanel function called");
+  
   const [activeTab, setActiveTab] = useState("rewards");
   const [rewards, setRewards] = useState<Reward[]>(initialRewards);
 
   // Buscar recompensas do Supabase ao carregar o painel
   useEffect(() => {
     const fetchRewards = async () => {
-      const { data, error } = await supabase.from("rewards").select("*");
+      // Buscar apenas recompensas ativas (não desativadas)
+      const { data, error } = await supabase
+        .from("rewards")
+        .select("*")
+        .neq("status", "desativado");
       console.log("Recompensas do Supabase:", data, error);
       if (!error && data) {
         // Mapear campos snake_case para camelCase e ajustar available
@@ -113,7 +126,7 @@ export function AdminPanel() {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [availabilityFilter, setAvailabilityFilter] = useState<string>("");
+  const [availabilityFilter, setAvailabilityFilter] = useState<string>("all");
   const [isAddRewardOpen, setIsAddRewardOpen] = useState(false);
   const [isEditRewardOpen, setIsEditRewardOpen] = useState(false);
   const [currentReward, setCurrentReward] = useState<Reward | null>(null);
@@ -153,7 +166,7 @@ export function AdminPanel() {
       name: "",
       description: "",
       pointsRequired: 0,
-      category: "",
+      category: categoriaOpcoes[0] || "Outros", // Definir categoria padrão
       available: "true",
       imageUrl: "",
     });
@@ -168,7 +181,7 @@ export function AdminPanel() {
       description: reward.description,
       pointsRequired: reward.pointsRequired,
       category: reward.category,
-      available: reward.available === true ? "true" : (reward.available === false ? "false" : "soon"),
+      available: reward.available || "true",
       imageUrl: reward.imageUrl,
     });
     setIsEditRewardOpen(true);
@@ -176,55 +189,141 @@ export function AdminPanel() {
 
   // Add new reward (persistente)
   const addReward = async () => {
+    // Validação dos campos obrigatórios
+    if (!formData.name.trim()) {
+      alert("Nome da recompensa é obrigatório!");
+      return;
+    }
+    if (!formData.description.trim()) {
+      alert("Descrição da recompensa é obrigatória!");
+      return;
+    }
+    if (!formData.category) {
+      alert("Categoria é obrigatória!");
+      return;
+    }
+    if (formData.pointsRequired <= 0) {
+      alert("Pontos necessários devem ser maior que zero!");
+      return;
+    }
+
     const newReward = {
-      name: formData.name,
-      description: formData.description,
+      name: formData.name.trim(),
+      description: formData.description.trim(),
       points_required: formData.pointsRequired,
       category: formData.category,
       available: formData.available === "true" ? "true" : (formData.available === "soon" ? "soon" : "false"),
-      image_url: formData.imageUrl,
+      image_url: formData.imageUrl.trim(),
     };
-    const { data, error } = await supabase
-      .from("rewards")
-      .insert([newReward])
-      .select()
-      .single();
-    if (error) {
-      alert("Erro ao salvar recompensa: " + error.message);
-      return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("rewards")
+        .insert([newReward])
+        .select()
+        .single();
+      
+      if (error) {
+        alert("Erro ao salvar recompensa: " + error.message);
+        return;
+      }
+      
+      // Mapear o retorno do insert para camelCase
+      setRewards([
+        ...rewards,
+        {
+          id: data.id,
+          name: data.name,
+          description: data.description,
+          pointsRequired: data.points_required,
+          category: data.category,
+          imageUrl: data.image_url,
+          available: String(data.available),
+        },
+      ]);
+      setIsAddRewardOpen(false);
+      alert("Recompensa criada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao criar recompensa:", error);
+      alert("Erro inesperado ao criar recompensa. Tente novamente.");
     }
-    // Mapear o retorno do insert para camelCase
-    setRewards([
-      ...rewards,
-      {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        pointsRequired: data.points_required,
-        category: data.category,
-        imageUrl: data.image_url,
-        available: typeof data.available === "string" ? data.available : (data.available === true ? "true" : (data.available === false ? "false" : "soon")),
-      },
-    ]);
-    setIsAddRewardOpen(false);
-    alert("Recompensa criada com sucesso!");
   };
 
   // Update existing reward
-  const updateReward = () => {
+  const updateReward = async () => {
     if (!currentReward) return;
 
-    const updatedRewards = rewards.map((reward) =>
-      reward.id === currentReward.id
-        ? { ...reward, ...formData, available: formData.available === "true" ? true : (formData.available === "soon" ? "soon" : false) }
-        : reward
-    );
-    setRewards(updatedRewards);
-    setIsEditRewardOpen(false);
+    // Validação dos campos obrigatórios
+    if (!formData.name.trim()) {
+      alert("Nome da recompensa é obrigatório!");
+      return;
+    }
+    if (!formData.description.trim()) {
+      alert("Descrição da recompensa é obrigatória!");
+      return;
+    }
+    if (!formData.category) {
+      alert("Categoria é obrigatória!");
+      return;
+    }
+    if (formData.pointsRequired <= 0) {
+      alert("Pontos necessários devem ser maior que zero!");
+      return;
+    }
+
+    try {
+      const updatedReward = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        points_required: formData.pointsRequired,
+        category: formData.category,
+        available: formData.available === "true" ? "true" : (formData.available === "soon" ? "soon" : "false"),
+        image_url: formData.imageUrl.trim(),
+      };
+
+      const { data, error } = await supabase
+        .from("rewards")
+        .update(updatedReward)
+        .eq("id", currentReward.id)
+        .select()
+        .single();
+
+      if (error) {
+        alert("Erro ao atualizar recompensa: " + error.message);
+        return;
+      }
+
+      const updatedRewards = rewards.map((reward) =>
+        reward.id === currentReward.id
+          ? {
+              ...reward,
+              name: data.name,
+              description: data.description,
+              pointsRequired: data.points_required,
+              category: data.category,
+              imageUrl: data.image_url,
+              available: String(data.available),
+            }
+          : reward
+      );
+      setRewards(updatedRewards);
+      setIsEditRewardOpen(false);
+      alert("Recompensa atualizada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atualizar recompensa:", error);
+      alert("Erro inesperado ao atualizar recompensa. Tente novamente.");
+    }
   };
 
   // Delete reward
-  const deleteReward = (id: string) => {
+  const deleteReward = async (id: string) => {
+    // Atualizar status para 'desativado' no Supabase
+    const { error } = await supabase.from("rewards").update({ available: "false" }).eq("id", id);
+    if (error) {
+      alert("Erro ao desativar recompensa: " + error.message);
+      return;
+    }
+    // Remover do estado local
     setRewards(rewards.filter((reward) => reward.id !== id));
   };
 
@@ -233,7 +332,7 @@ export function AdminPanel() {
     setRewards(
       rewards.map((reward) =>
         reward.id === id
-          ? { ...reward, available: reward.available === true ? "soon" : (reward.available === "soon" ? false : true) }
+          ? { ...reward, available: reward.available === "true" ? "soon" : (reward.available === "soon" ? "false" : "true") }
           : reward,
       ),
     );
@@ -301,8 +400,20 @@ export function AdminPanel() {
   };
 
   // Atualizar usuário no estado
-  const updateUser = () => {
+  const updateUser = async () => {
     if (!currentUser) return;
+    // Atualizar no Supabase
+    const { error } = await supabase.from("users").update({
+      name: userForm.name,
+      phone: normalizePhoneForStorage(removePhoneMask(userForm.phone)), // Normaliza com código do país
+      points: Number(userForm.points),
+      role: userForm.role,
+    }).eq("id", currentUser.id);
+    if (error) {
+      alert("Erro ao atualizar usuário: " + error.message);
+      return;
+    }
+    // Atualizar no estado local
     const updatedUsers = users.map((u) =>
       u.id === currentUser.id
         ? { ...u, ...userForm, points: Number(userForm.points), role: userForm.role }
@@ -310,6 +421,7 @@ export function AdminPanel() {
     );
     setUsers(updatedUsers);
     setIsEditUserOpen(false);
+    alert("Usuário atualizado com sucesso!");
   };
 
   // Handle input do modal de usuário
@@ -318,8 +430,13 @@ export function AdminPanel() {
     setUserForm({ ...userForm, [name]: name === "points" ? Number(value) : value });
   };
 
+  const navigate = useNavigate();
+
   return (
     <div className="container mx-auto p-6 bg-white min-h-screen">
+      <div className="mb-4 flex justify-end">
+        <Button variant="outline" onClick={() => navigate("/")}>Voltar para área do usuário</Button>
+      </div>
       <h1 className="text-3xl font-bold mb-6">Painel Administrativo</h1>
 
       <Tabs
@@ -328,10 +445,11 @@ export function AdminPanel() {
         onValueChange={setActiveTab}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-3 mb-8">
-          <TabsTrigger value="rewards">Gerenciar Recompensas</TabsTrigger>
-          <TabsTrigger value="users">Gerenciar Usuários</TabsTrigger>
-          <TabsTrigger value="settings">Configurações do Sistema</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsTrigger value="rewards">Recompensas</TabsTrigger>
+          <TabsTrigger value="campaigns">Campanhas</TabsTrigger>
+          <TabsTrigger value="users">Usuários</TabsTrigger>
+          <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
 
         {/* Rewards Management Tab */}
@@ -401,7 +519,7 @@ export function AdminPanel() {
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="name" className="text-right">
-                      Nome
+                      Nome <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="name"
@@ -414,7 +532,7 @@ export function AdminPanel() {
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="description" className="text-right">
-                      Descrição
+                      Descrição <span className="text-red-500">*</span>
                     </Label>
                     <Textarea
                       id="description"
@@ -427,7 +545,7 @@ export function AdminPanel() {
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="pointsRequired" className="text-right">
-                      Pontos
+                      Pontos <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="pointsRequired"
@@ -441,7 +559,7 @@ export function AdminPanel() {
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="category" className="text-right">
-                      Categoria
+                      Categoria <span className="text-red-500">*</span>
                     </Label>
                     <Select
                       name="category"
@@ -452,7 +570,7 @@ export function AdminPanel() {
                         <SelectValue placeholder="Selecione uma categoria" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categoriaOpcoes.map((cat) => (
+                        {categoriaOpcoes.filter(cat => cat && cat.trim() !== "").map((cat) => (
                           <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                         ))}
                       </SelectContent>
@@ -516,8 +634,8 @@ export function AdminPanel() {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-xl">{reward.name}</CardTitle>
-                    <Badge variant={reward.available === true ? "default" : (reward.available === "soon" ? "secondary" : "outline")}>
-                      {reward.available === true ? "Disponível" : (reward.available === "soon" ? "Em breve" : "Indisponível")}
+                    <Badge variant={reward.available === "true" ? "default" : (reward.available === "soon" ? "secondary" : "outline")}>
+                      {reward.available === "true" ? "Disponível" : (reward.available === "soon" ? "Em breve" : "Indisponível")}
                     </Badge>
                   </div>
                   <CardDescription className="text-sm text-gray-500">
@@ -554,7 +672,7 @@ export function AdminPanel() {
                       <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="edit-name" className="text-right">
-                            Nome
+                            Nome <span className="text-red-500">*</span>
                           </Label>
                           <Input
                             id="edit-name"
@@ -570,7 +688,7 @@ export function AdminPanel() {
                             htmlFor="edit-description"
                             className="text-right"
                           >
-                            Descrição
+                            Descrição <span className="text-red-500">*</span>
                           </Label>
                           <Textarea
                             id="edit-description"
@@ -586,7 +704,7 @@ export function AdminPanel() {
                             htmlFor="edit-pointsRequired"
                             className="text-right"
                           >
-                            Pontos
+                            Pontos <span className="text-red-500">*</span>
                           </Label>
                           <Input
                             id="edit-pointsRequired"
@@ -600,7 +718,7 @@ export function AdminPanel() {
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="edit-category" className="text-right">
-                            Categoria
+                            Categoria <span className="text-red-500">*</span>
                           </Label>
                           <Select
                             name="category"
@@ -611,7 +729,7 @@ export function AdminPanel() {
                               <SelectValue placeholder="Selecione uma categoria" />
                             </SelectTrigger>
                             <SelectContent>
-                              {categoriaOpcoes.map((cat) => (
+                              {categoriaOpcoes.filter(cat => cat && cat.trim() !== "").map((cat) => (
                                 <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                               ))}
                             </SelectContent>
@@ -663,7 +781,7 @@ export function AdminPanel() {
 
                   <div className="flex gap-2">
                     <Button
-                      variant="ghost"
+                      variant="destructive"
                       size="sm"
                       onClick={() => toggleRewardAvailability(reward.id)}
                     >
@@ -677,7 +795,7 @@ export function AdminPanel() {
 
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
+                        <Button variant="ghost" size="sm">
                           <Trash2 className="h-4 w-4 mr-1" /> Excluir
                         </Button>
                       </AlertDialogTrigger>
@@ -712,6 +830,11 @@ export function AdminPanel() {
               <p className="text-gray-500">Nenhuma recompensa encontrada.</p>
             </div>
           )}
+        </TabsContent>
+
+        {/* Campaigns Management Tab */}
+        <TabsContent value="campaigns" className="space-y-4">
+          <AdminCampaigns />
         </TabsContent>
 
         {/* Users Management Tab */}
@@ -781,6 +904,11 @@ export function AdminPanel() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-4">Dados de Teste</h3>
+                <SeedDatabaseButton />
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="system-name">Nome do Sistema</Label>
@@ -790,7 +918,7 @@ export function AdminPanel() {
                   <Label htmlFor="contact-email">Email de Contato</Label>
                   <Input
                     id="contact-email"
-                    defaultValue="contato@reciclamt.com"
+                    defaultValue="reciclamt.projeto@gmail.com"
                   />
                 </div>
                 <div className="space-y-2">
@@ -837,9 +965,16 @@ export function AdminPanel() {
               <Input
                 id="edit-user-phone"
                 name="phone"
-                value={userForm.phone}
-                onChange={handleUserFormChange}
+                value={applyPhoneMask(userForm.phone)}
+                onChange={(e) => {
+                  const maskedValue = applyPhoneMask(e.target.value);
+                  setUserForm(prev => ({
+                    ...prev,
+                    phone: maskedValue
+                  }));
+                }}
                 className="col-span-3"
+                placeholder="(65) 99999-9999"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
